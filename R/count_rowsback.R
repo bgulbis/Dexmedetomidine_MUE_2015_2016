@@ -19,7 +19,7 @@
 
 count_rowsback <- function(datetime, back = 2) {
     sapply(datetime, function(curr.val)
-        sum(ifelse(datetime >= curr.val - days(back) & datetime <= curr.val,
-                   TRUE, FALSE))
+        sum(ifelse(datetime >= curr.val - lubridate::days(back) &
+                       datetime <= curr.val, TRUE, FALSE))
     )
 }

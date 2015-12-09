@@ -9,5 +9,5 @@ Description: This package contains several functions which are helpful for
     and checking for lab changes over a specified period of time.
 License: GPL-3
 LazyData: TRUE
-Imports: R.utils
+Imports: R.utils, lubridate
 RoxygenNote: 5.0.1
