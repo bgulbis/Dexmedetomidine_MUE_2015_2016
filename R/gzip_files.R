@@ -11,11 +11,17 @@
 #'
 #' @param dir.name A string with the name of the directory containing the data
 #'   files. Defaults to the current working directory.
+#' @param pattern An optional regular expression. Only file names which match
+#'   the regular expression will be compressed.
 #'
-#' @seealso \code{\link[R.utils]{gzip}}
+#' @seealso
+#' \code{\link[R.utils]{gzip}},
+#' \code{\link[base]{regex}} for regular expressions
 #'
 #' @export
-gzip_files <- function(dir.name = getwd()) {
-    comp.files <- list.files(dir.name, full.names=TRUE)
-    lapply(comp.files, function(x) if (R.utils::isGzipped(x) == FALSE) R.utils::gzip(x))
+gzip_files <- function(dir.name = getwd(), pattern = NULL) {
+    comp.files <- list.files(dir.name, pattern = pattern, full.names=TRUE)
+    lapply(comp.files, function(x)
+        if (R.utils::isGzipped(x) == FALSE) R.utils::gzip(x, overwrite=TRUE)
+    )
 }

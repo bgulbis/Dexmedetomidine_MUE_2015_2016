@@ -4,11 +4,14 @@
 \alias{gzip_files}
 \title{Compress data files}
 \usage{
-gzip_files(dir.name = getwd())
+gzip_files(dir.name = getwd(), pattern = NULL)
 }
 \arguments{
 \item{dir.name}{A string with the name of the directory containing the data
 files. Defaults to the current working directory.}
+
+\item{pattern}{An optional regular expression. Only file names which match
+the regular expression will be compressed.}
 }
 \description{
 \code{gzip_files} compresses all data files in a directory using gzip, if not
@@ -20,6 +23,7 @@ within the directory to if they are already compressed. For each file that is
 not, it will compress the file using \code{\link[R.utils]{gzip}}.
 }
 \seealso{
-\code{\link[R.utils]{gzip}}
+\code{\link[R.utils]{gzip}},
+\code{\link[base]{regex}} for regular expressions
 }
 
