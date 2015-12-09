@@ -10,7 +10,7 @@
 #' \code{\link[zoo]{rollapplyr}}.
 #'
 #' @param datetime A vector of POSIXct values
-#' @param pattern An optional numeric specifying the number of days back to go.
+#' @param back An optional numeric specifying the number of days back to go.
 #'   Defaults to 2 days.
 #' @return An integer with the  number of rows; can be passed on to
 #'   \code{\link[zoo]{rollapplyr}}
