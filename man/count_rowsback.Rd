@@ -9,7 +9,7 @@ count_rowsback(datetime, back = 2)
 \arguments{
 \item{datetime}{A vector of POSIXct values}
 
-\item{pattern}{An optional numeric specifying the number of days back to go.
+\item{back}{An optional numeric specifying the number of days back to go.
 Defaults to 2 days.}
 }
 \value{
