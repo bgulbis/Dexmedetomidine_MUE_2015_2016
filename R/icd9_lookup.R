@@ -1,0 +1,40 @@
+# icd9_lookup.R
+
+#' Lookup ICD9 codes from CCS codes
+#'
+#' \code{icd9_lookup} takes a data frame with CCS codes and returns the
+#' corresponding ICD9 codes
+#'
+#' This function takes a data frame with three columns: disease.state, type, and
+#' code. The column \code{disease.state} is a character field with the name of a
+#' disease state which will be used for grouping. The column \code{type} is a
+#' character field with either "ICD9" or "CCS", which indicates the type of
+#' code. The column \code{code} is a character field with the ICD9 or CCS code.
+#' For all rows with CCS codes, the function will look-up the corresponding ICD9
+#' code and then return a data frame with two columns: disease.state and
+#' icd9.code.
+#'
+#'
+#' @param df A data frame with columns: disease.state, type, code
+#'
+#' @return A data frame with columns: disease.state, icd9.code
+#'
+#' @export
+icd9_lookup <- function(df) {
+    ## find the ICD9 codes for the desired exclusions by CCS code
+    tmp.ccs <- dplyr::filter(df, type == "CCS") %>%
+        dplyr::mutate(ccs.code = as.numeric(code)) %>%
+        dplyr::inner_join(ccs.diagnosis, by="ccs.code")
+
+    ## ICD9 codes for non-CCS code exclusions
+    tmp.icd9 <- dplyr::filter(df, type=="ICD9") %>%
+        dplyr::mutate(icd9.code = code) %>%
+        dplyr::inner_join(ccs.diagnosis, by="icd9.code")
+
+    ## create one table with all ICD9 codes that should be excluded
+    tmp.excl.icd9 <- dplyr::bind_rows(tmp.ccs, tmp.icd9) %>%
+        dplyr::select(disease.state, icd9.code) %>%
+        dplyr::group_by(disease.state)
+
+    return(tmp.excl.icd9)
+}
