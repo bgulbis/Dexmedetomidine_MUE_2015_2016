@@ -2,3 +2,5 @@
 
 export(count_rowsback)
 export(gzip_files)
+export(icd9_lookup)
+import(dplyr)

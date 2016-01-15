@@ -19,22 +19,24 @@
 #'
 #' @return A data frame with columns: disease.state, icd9.code
 #'
+#' @import dplyr
+#'
 #' @export
 icd9_lookup <- function(df) {
-    ## find the ICD9 codes for the desired exclusions by CCS code
-    tmp.ccs <- dplyr::filter(df, type == "CCS") %>%
-        dplyr::mutate(ccs.code = as.numeric(code)) %>%
-        dplyr::inner_join(ccs.diagnosis, by="ccs.code")
+    # find the ICD9 codes for the desired exclusions by CCS code
+    tmp.ccs <- filter(df, type == "CCS") %>%
+        mutate(ccs.code = as.numeric(code)) %>%
+        inner_join(ccs.diagnosis, by="ccs.code")
 
-    ## ICD9 codes for non-CCS code exclusions
-    tmp.icd9 <- dplyr::filter(df, type=="ICD9") %>%
-        dplyr::mutate(icd9.code = code) %>%
-        dplyr::inner_join(ccs.diagnosis, by="icd9.code")
+    # ICD9 codes for non-CCS code exclusions
+    tmp.icd9 <- filter(df, type=="ICD9") %>%
+        mutate(icd9.code = code) %>%
+        inner_join(ccs.diagnosis, by="icd9.code")
 
-    ## create one table with all ICD9 codes that should be excluded
-    tmp.excl.icd9 <- dplyr::bind_rows(tmp.ccs, tmp.icd9) %>%
-        dplyr::select(disease.state, icd9.code) %>%
-        dplyr::group_by(disease.state)
+    # create one table with all ICD9 codes that should be excluded
+    tmp.excl.icd9 <- bind_rows(tmp.ccs, tmp.icd9) %>%
+        select(disease.state, icd9.code) %>%
+        group_by(disease.state)
 
     return(tmp.excl.icd9)
 }
