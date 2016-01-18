@@ -62,7 +62,7 @@ icd9_description <- function(codes) {
 
     descript <- ccs.diagnosis %>%
         filter(icd9.code %in% codes) %>%
-        select(-ccs.code)
+        select(icd9.code, icd9.description)
 
     return(descript)
 }
