@@ -59,9 +59,10 @@ icd9_lookup <- function(df) {
 #'
 #' @export
 icd9_description <- function(codes) {
+
     descript <- ccs.diagnosis %>%
         filter(icd9.code %in% codes) %>%
-        select(icd9.code, icd9.description)
+        select(-ccs.code)
 
     return(descript)
 }
