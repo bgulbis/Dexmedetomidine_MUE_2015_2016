@@ -40,3 +40,28 @@ icd9_lookup <- function(df) {
 
     return(tmp.excl.icd9)
 }
+
+
+#' Lookup ICD9 code description
+#'
+#' \code{icd9_description} takes a vector of ICD9 codes and returns a data frame
+#' with the corresponding description for each code
+#'
+#' This function takes a character vector of ICD9 codes and returns a data frame
+#' with two columns: icd9.code and icd9.description.
+#'
+#'
+#' @param codes A character vector of ICD9 codes
+#'
+#' @return A data frame with columns: icd9.code and icd9.description
+#'
+#' @import dplyr
+#'
+#' @export
+icd9_description <- function(codes) {
+    descript <- ccs.diagnosis %>%
+        filter(icd9.code %in% codes) %>%
+        select(icd9.code, icd9.description)
+
+    return(descript)
+}
