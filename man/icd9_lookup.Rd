@@ -4,10 +4,13 @@
 \alias{icd9_lookup}
 \title{Lookup ICD9 codes from CCS codes}
 \usage{
-icd9_lookup(df)
+icd9_lookup(df, procedure = FALSE)
 }
 \arguments{
 \item{df}{A data frame with columns: disease.state, type, code}
+
+\item{procedure}{A logical indicating whether to use diagnosis codes
+(default) or procedure codes}
 }
 \value{
 A data frame with columns: disease.state, icd9.code
@@ -24,6 +27,7 @@ character field with either "ICD9" or "CCS", which indicates the type of
 code. The column \code{code} is a character field with the ICD9 or CCS code.
 For all rows with CCS codes, the function will look-up the corresponding ICD9
 code and then return a data frame with two columns: disease.state and
-icd9.code.
+icd9.code. The procedure parameter is used to specify whether diagnosis codes
+or procedure codes should be returned.
 }
 

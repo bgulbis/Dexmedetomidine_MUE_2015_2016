@@ -12,33 +12,42 @@
 #' code. The column \code{code} is a character field with the ICD9 or CCS code.
 #' For all rows with CCS codes, the function will look-up the corresponding ICD9
 #' code and then return a data frame with two columns: disease.state and
-#' icd9.code.
+#' icd9.code. The procedure parameter is used to specify whether diagnosis codes
+#' or procedure codes should be returned.
 #'
 #'
 #' @param df A data frame with columns: disease.state, type, code
+#' @param procedure A logical indicating whether to use diagnosis codes
+#'   (default) or procedure codes
 #'
 #' @return A data frame with columns: disease.state, icd9.code
 #'
 #' @import dplyr
 #'
 #' @export
-icd9_lookup <- function(df) {
+icd9_lookup <- function(df, procedure = FALSE) {
+    if (procedure == TRUE) {
+        data <- ccs.procedures
+    } else {
+        data <- ccs.diagnosis
+    }
+
     # find the ICD9 codes for the desired exclusions by CCS code
-    tmp.ccs <- filter(df, type == "CCS") %>%
+    ccs <- filter(df, type == "CCS") %>%
         mutate(ccs.code = as.numeric(code)) %>%
-        inner_join(ccs.diagnosis, by="ccs.code")
+        inner_join(data, by="ccs.code")
 
     # ICD9 codes for non-CCS code exclusions
-    tmp.icd9 <- filter(df, type=="ICD9") %>%
+    icd9 <- filter(df, type=="ICD9") %>%
         mutate(icd9.code = code) %>%
-        inner_join(ccs.diagnosis, by="icd9.code")
+        inner_join(data, by="icd9.code")
 
     # create one table with all ICD9 codes that should be excluded
-    tmp.excl.icd9 <- bind_rows(tmp.ccs, tmp.icd9) %>%
+    codes <- bind_rows(ccs, icd9) %>%
         select(disease.state, icd9.code) %>%
         group_by(disease.state)
 
-    return(tmp.excl.icd9)
+    return(codes)
 }
 
 
@@ -52,15 +61,22 @@ icd9_lookup <- function(df) {
 #'
 #'
 #' @param codes A character vector of ICD9 codes
+#' @param procedure A logical indicating whether to use diagnosis codes
+#'   (default) or procedure codes
 #'
 #' @return A data frame with columns: icd9.code and icd9.description
 #'
 #' @import dplyr
 #'
 #' @export
-icd9_description <- function(codes) {
+icd9_description <- function(codes, procedure = FALSE) {
+    if (procedure == TRUE) {
+        data <- ccs.procedures
+    } else {
+        data <- ccs.diagnosis
+    }
 
-    descript <- ccs.diagnosis %>%
+    descript <- data %>%
         filter(icd9.code %in% codes) %>%
         select(icd9.code, icd9.description)
 

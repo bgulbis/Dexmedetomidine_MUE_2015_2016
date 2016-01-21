@@ -4,10 +4,13 @@
 \alias{icd9_description}
 \title{Lookup ICD9 code description}
 \usage{
-icd9_description(codes)
+icd9_description(codes, procedure = FALSE)
 }
 \arguments{
 \item{codes}{A character vector of ICD9 codes}
+
+\item{procedure}{A logical indicating whether to use diagnosis codes
+(default) or procedure codes}
 }
 \value{
 A data frame with columns: icd9.code and icd9.description
