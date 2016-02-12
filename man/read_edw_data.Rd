@@ -4,13 +4,15 @@
 \alias{read_edw_data}
 \title{Read EDW data from csv files}
 \usage{
-read_edw_data(data.dir, pattern)
+read_edw_data(data.dir, file.name, type = NA)
 }
 \arguments{
-\item{data.dir}{A character vector with the name of the directory containing
-the data files}
+\item{data.dir}{A character with the name of the directory containing the
+data files}
 
-\item{pattern}{A character vector with name of data file}
+\item{type}{An optional character indicating type of data being tidied}
+
+\item{pattern}{A character with name of data file or pattern to match}
 }
 \value{
 A data frame
