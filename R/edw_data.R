@@ -45,8 +45,8 @@ read_edw_data <- function(data.dir, file.name, type = NA) {
 #' a character vector indicating the type of data being tidied, and will return
 #' a tidied data frame. Valid options for type include: blood, demographics,
 #' diagnosis, home_meds, icu_score, labs, location, measures, meds_continuous,
-#' meds_freq, meds_sched, mpp, procedures, surgeries, radiology, vent, vitals,
-#' warfarin.
+#' meds_freq, meds_sched, meds_sched_freq, mpp, procedures, surgeries,
+#' radiology, vent, vitals, warfarin.
 #'
 #'
 #' @param raw.data A data frame with raw data from EDW
@@ -114,6 +114,16 @@ tidy_edw_data <- function(raw.data, type) {
                                med.dose = as.numeric(Dosage.Amount),
                                med.dose.units = factor(Dosage.Unit, exclude = ""),
                                med.route = factor(Route.of.Administration...Short, exclude = ""),
+                               event.id = Event.ID)
+
+    } else if (type == "meds_sched_freq") {
+        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
+                               med.datetime = lubridate::ymd_hms(Clinical.Event.End.Date.Time),
+                               med = Clinical.Event,
+                               med.dose = as.numeric(Dosage.Amount),
+                               med.dose.units = factor(Dosage.Unit, exclude = ""),
+                               med.route = factor(Route.of.Administration...Short, exclude = ""),
+                               freq = Parent.Order.Frequency.Description,
                                event.id = Event.ID)
 
     } else if (type == "procedures") {
