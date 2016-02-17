@@ -25,16 +25,38 @@ read_edw_data <- function(data.dir, file.name, type = NA) {
         type <- file.name
     }
 
-    raw <- list.files(data.dir, pattern = file.name, full.names = TRUE) %>%
-        lapply(read.csv, colClasses = "character") %>%
-        bind_rows %>%
-        distinct
+    raw <- read_data(data.dir, file.name)
 
     tidy <- tidy_edw_data(raw, type)
 
     return(tidy)
 }
 
+#' Read and join data from multiple csv files
+#'
+#' \code{read_data} takes a directory and file name and reads in all matching
+#' csv files and binds them together into a data frame
+#'
+#' This function takes a directory and file name and reads in all matching csv
+#' files and binds them together into a data frame.
+#'
+#' @param data.dir A character with the name of the directory containing the
+#'   data files
+#' @param pattern A character with name of data file or pattern to match
+#'
+#' @return A data frame
+#'
+#' @import dplyr
+#'
+#' @export
+read_data <- function(data.dir, file.name) {
+    raw <- list.files(data.dir, pattern = file.name, full.names = TRUE) %>%
+        lapply(read.csv, colClasses = "character") %>%
+        bind_rows %>%
+        distinct
+
+    return(raw)
+}
 
 #' Tidy data from EDW
 #'
