@@ -4,18 +4,15 @@
 \alias{tidy_outpt_meds}
 \title{Tidy outpatient medications}
 \usage{
-tidy_outpt_meds(ref.data, pt.data, patients, class = TRUE, home = TRUE)
+tidy_outpt_meds(ref.data, pt.data, patients, home = TRUE)
 }
 \arguments{
-\item{ref.data}{A data frame with the desired diagnosis codes}
+\item{ref.data}{A data frame with two columns, name and type}
 
-\item{pt.data}{A data frame with all patient diagnosis codes}
+\item{pt.data}{A data frame with all outpatient medications}
 
 \item{patients}{A data frame with a column pie.id including all patients in
 study}
-
-\item{class}{optional logical indicating whether medications should be
-grouped by class, default is TRUE}
 
 \item{home}{optional logical indicating to look for home medications if TRUE
 or discharge medications if FALSE}
@@ -28,8 +25,12 @@ A data frame
 medications
 }
 \details{
-This function takes a data frame with reference outpatient medications and a
-data frame with all patient outpatient medications, and returns a data frame
-with a logical for each medication for each patient.
+This function takes a data frame with reference outpatient medications or
+medication classes and a data frame with all patient outpatient medications,
+and returns a data frame with a logical for each medication for each patient.
+The data frame passed to ref.data should contain two columns: name and type.
+The name column should contain either generic medication names or medication
+classes. The type column should specify whether the value in name is a
+"class" or "med".
 }
 

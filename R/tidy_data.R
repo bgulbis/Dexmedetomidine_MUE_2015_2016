@@ -25,7 +25,11 @@ tidy_data <- function(type, ...) {
         y <- tidy_diagnosis(x$ref.data, x$pt.data, x$patients)
     } else if (type == "outpt_meds") {
         # need to pass options for class and home if included
-        y <- tidy_outpt_meds(x$ref.data, x$pt.data, x$patients)
+        if (exists(x$home)) {
+            y <- tidy_outpt_meds(x$ref.data, x$pt.data, x$patients, x$home)
+        } else {
+            y <- tidy_outpt_meds(x$ref.data, x$pt.data, x$patients)
+        }
     } else {
         y <- "Invalid type"
     }
@@ -75,16 +79,18 @@ tidy_diagnosis <- function(ref.data, pt.data, patients) {
 #' \code{tidy_outpt_meds} determines which patients have the desired outpatient
 #' medications
 #'
-#' This function takes a data frame with reference outpatient medications and a
-#' data frame with all patient outpatient medications, and returns a data frame
-#' with a logical for each medication for each patient.
+#' This function takes a data frame with reference outpatient medications or
+#' medication classes and a data frame with all patient outpatient medications,
+#' and returns a data frame with a logical for each medication for each patient.
+#' The data frame passed to ref.data should contain two columns: name and type.
+#' The name column should contain either generic medication names or medication
+#' classes. The type column should specify whether the value in name is a
+#' "class" or "med".
 #'
-#' @param ref.data A data frame with the desired diagnosis codes
-#' @param pt.data A data frame with all patient diagnosis codes
+#' @param ref.data A data frame with two columns, name and type
+#' @param pt.data A data frame with all outpatient medications
 #' @param patients A data frame with a column pie.id including all patients in
 #'   study
-#' @param class optional logical indicating whether medications should be
-#'   grouped by class, default is TRUE
 #' @param home optional logical indicating to look for home medications if TRUE
 #'   or discharge medications if FALSE
 #'
@@ -92,13 +98,14 @@ tidy_diagnosis <- function(ref.data, pt.data, patients) {
 #'
 #' @import dplyr
 #'
-tidy_outpt_meds <- function(ref.data, pt.data, patients, class = TRUE, home = TRUE) {
-    # if class is TRUE, group by medication class
-    if (class == TRUE) {
-        ref.data <- ref.data %>%
-            ungroup %>%
-            mutate(med.class = factor(med.class))
-    }
+tidy_outpt_meds <- function(ref.data, pt.data, patients, home = TRUE) {
+    # for any med classes, lookup the meds included in the class
+    meds <- filter(ref.data, type == "class")
+    meds <- med_lookup(meds$name)
+
+    # join the list of meds with any indivdual meds included
+    lookup.meds <- filter(ref.data, type == "med")
+    lookup.meds <- c(lookup.meds$name, meds$med.name)
 
     # filter to either home medications or discharge medications
     if (home == TRUE) {
@@ -107,14 +114,18 @@ tidy_outpt_meds <- function(ref.data, pt.data, patients, class = TRUE, home = TR
         pt.data <- filter(pt.data, med.type == "Prescription / Discharge Order")
     }
 
+    # filter to desired meds, then spread into wide data set by med name or
+    # class
     tmp <- pt.data %>%
         mutate(med = stringr::str_to_lower(med)) %>%
-        inner_join(ref.data, by = c("med" = "med.name")) %>%
-        mutate(value = TRUE) %>%
-        select(pie.id, med.class, value) %>%
-        group_by(pie.id, med.class) %>%
+        filter(med %in% lookup.meds) %>%
+        left_join(meds, by = c("med" = "med.name")) %>%
+        mutate(group = ifelse(is.na(med.class), med, med.class),
+               value = TRUE) %>%
+        select(pie.id, group, value) %>%
+        group_by(pie.id, group) %>%
         distinct %>%
-        tidyr::spread(med.class, value, fill = FALSE, drop = FALSE) %>%
+        tidyr::spread(group, value, fill = FALSE, drop = FALSE) %>%
         full_join(select(patients, pie.id), by = "pie.id") %>%
         mutate_each(funs(ifelse(is.na(.), FALSE, .)), -pie.id)
 
