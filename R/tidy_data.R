@@ -142,12 +142,13 @@ tidy_meds_outpt <- function(ref.data, pt.data, patients, home = TRUE) {
 #' This function takes a data frame with reference medications or medication
 #' classes and data frames with all continuous and scheduled medications, and
 #' returns a data frame with a logical for each medication for each patient. The
-#' data frame passed to ref.data should contain two columns: name and type. The
-#' name column should contain either generic medication names or medication
-#' classes. The type column should specify whether the value in name is a
-#' "class" or "med".
+#' data frame passed to ref.data should contain three columns: name, type, and
+#' group. The name column should contain either generic medication names or
+#' medication classes. The type column should specify whether the value in name
+#' is a "class" or "med". The group column should specify whether the medication
+#' is a continous or scheduled medication.
 #'
-#' @param ref.data A data frame with two columns, name and type
+#' @param ref.data A data frame with three columns: name, type, and group
 #' @param cont.data A data frame with all outpatient medications
 #' @param sched.data A data frame with all outpatient medications
 #' @param patients A data frame with a column pie.id including all patients in
@@ -158,6 +159,9 @@ tidy_meds_outpt <- function(ref.data, pt.data, patients, home = TRUE) {
 #' @import dplyr
 #'
 tidy_meds_cont <- function(ref.data, cont.data, sched.data, patients) {
+    # tidy continuous meds
+    ref.data <- filter(ref.data, group == "cont")
+
     # for any med classes, lookup the meds included in the class
     class.meds <- filter(ref.data, type == "class")
     class.meds <- med_lookup(class.meds$name)
