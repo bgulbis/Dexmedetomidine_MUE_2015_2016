@@ -9,10 +9,10 @@
 #' matching csv files and binds them together into a data frame.
 #'
 #'
-#' @param data.dir A character with the name of the directory containing the
+#' @param data.dir A character string with the name of the directory containing the
 #'   data files
-#' @param pattern A character with name of data file or pattern to match
-#' @param type An optional character indicating type of data being tidied
+#' @param file.name A character string with name of data file or pattern to match
+#' @param type An optional character string indicating type of data being tidied
 #'
 #' @return A data frame
 #'
@@ -40,9 +40,9 @@ read_edw_data <- function(data.dir, file.name, type = NA) {
 #' This function takes a directory and file name and reads in all matching csv
 #' files and binds them together into a data frame.
 #'
-#' @param data.dir A character with the name of the directory containing the
+#' @param data.dir A character string with the name of the directory containing the
 #'   data files
-#' @param pattern A character with name of data file or pattern to match
+#' @param file.name A character string with name of data file or pattern to match
 #'
 #' @return A data frame
 #'

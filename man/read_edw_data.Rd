@@ -7,12 +7,12 @@
 read_edw_data(data.dir, file.name, type = NA)
 }
 \arguments{
-\item{data.dir}{A character with the name of the directory containing the
+\item{data.dir}{A character string with the name of the directory containing the
 data files}
 
-\item{type}{An optional character indicating type of data being tidied}
+\item{file.name}{A character string with name of data file or pattern to match}
 
-\item{pattern}{A character with name of data file or pattern to match}
+\item{type}{An optional character string indicating type of data being tidied}
 }
 \value{
 A data frame

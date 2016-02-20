@@ -13,8 +13,6 @@
 #'
 #' @return A data frame
 #'
-#' @import dplyr
-#'
 #' @export
 tidy_data <- function(type, ...) {
     # get list of parameters from ellipsis
@@ -39,6 +37,24 @@ tidy_data <- function(type, ...) {
     return(y)
 }
 
+#' Fill NA with FALSE
+#'
+#' \code{fill_false} returns FALSE if the value is NA, otherwise returns the
+#' original value
+#'
+#' This function takes a value and checks if it is NA. If it is NA it will
+#' return FALSE, otherwise it will return the original value. This can be used
+#' to fill data frame rows which are all NA but should be FALSE. with reference
+#' diagnosis codes and a data
+#'
+#' @param y A value
+#'
+#' @return Either FALSE or the original value
+#'
+fill_false <- function(y) {
+    ifelse(is.na(y), FALSE, y)
+}
+
 #' Tidy diagnosis codes
 #'
 #' \code{tidy_diagnosis} determines which patients have the desired diagnosis
@@ -49,31 +65,45 @@ tidy_data <- function(type, ...) {
 #'
 #' @param ref.data A data frame with the desired diagnosis codes
 #' @param pt.data A data frame with all patient diagnosis codes
-#' @param patients A data frame with a column pie.id including all patients in study
+#' @param patients A data frame with a column pie.id including all patients in
+#'   study
 #'
 #' @return A data frame
 #'
-#' @import dplyr
-#'
 tidy_diagnosis <- function(ref.data, pt.data, patients) {
     # convert any CCS codes to ICD9
-    lookup.codes <- icd9_lookup(ref.data) %>%
-        ungroup %>%
-        mutate(disease.state = factor(disease.state))
+    lookup.codes <- icd9_lookup(ref.data)
+    lookup.codes <- dplyr::ungroup(lookup.codes)
+    dots <- list(~factor(disease.state))
+    lookup.codes <- dplyr::mutate_(lookup.codes, .dots = setNames(dots, "disease.state"))
 
-    tmp <- pt.data %>%
-        filter(diag.type != "Admitting",
-               diag.type != "Working") %>%
-        inner_join(lookup.codes, by = c("diag.code" = "icd9.code")) %>%
-        mutate(value = TRUE) %>%
-        select(pie.id, disease.state, value) %>%
-        group_by(pie.id, disease.state) %>%
-        distinct %>%
-        tidyr::spread(disease.state, value, fill = FALSE, drop = FALSE) %>%
-        full_join(select(patients, pie.id), by = "pie.id") %>%
-        mutate_each(funs(ifelse(is.na(.), FALSE, .)), -pie.id)
+    # only use finalized diagnosis codes
+    dots <- list(~diag.type != "Admitting", ~diag.type != "Working")
+    x <- dplyr::filter_(pt.data, .dots = dots)
 
-    return(tmp)
+    # join with the lookup codes
+    x <- dplyr::inner_join(x, lookup.codes, by = c("diag.code" = "icd9.code"))
+
+    # add a column called value and assign as TRUE, to be used with spread
+    dots <- lazyeval::interp("y", y = TRUE)
+    x <- dplyr::mutate_(x, .dots = setNames(dots, "value"))
+
+    # drop all columns except pie.id, disease state, and value
+    x <- dplyr::select_(x, .dots = list("pie.id", "disease.state", "value"))
+
+    # remove all duplicate pie.id / disease state combinations
+    x <- dplyr::distinct_(x, .dots = list("pie.id", "disease.state"))
+
+    # convert the data to wide format
+    x <- tidyr::spread_(x, "disease.state", "value", fill = FALSE, drop = FALSE)
+
+    # join with list of all patients, fill in values of FALSE for any patients
+    # not in the data set
+    pts <- dplyr::select_(patients, "pie.id")
+    x <- dplyr::full_join(x, pts, by = "pie.id")
+    x <- dplyr::mutate_each_(x, funs(fill_false), list(quote(-pie.id)))
+
+    return(x)
 }
 
 #' Tidy outpatient medications
@@ -98,40 +128,56 @@ tidy_diagnosis <- function(ref.data, pt.data, patients) {
 #'
 #' @return A data frame
 #'
-#' @import dplyr
-#'
 tidy_meds_outpt <- function(ref.data, pt.data, patients, home = TRUE) {
     # for any med classes, lookup the meds included in the class
-    meds <- filter(ref.data, type == "class")
+    meds <- dplyr::filter_(ref.data, .dots = list(~type == "class"))
     meds <- med_lookup(meds$name)
 
     # join the list of meds with any indivdual meds included
-    lookup.meds <- filter(ref.data, type == "med")
+    lookup.meds <- dplyr::filter_(ref.data, .dots = list(~type == "med"))
     lookup.meds <- c(lookup.meds$name, meds$med.name)
 
     # filter to either home medications or discharge medications
     if (home == TRUE) {
-        pt.data <- filter(pt.data, med.type == "Recorded / Home Meds")
+        dots <- list(~med.type == "Recorded / Home Meds")
     } else {
-        pt.data <- filter(pt.data, med.type == "Prescription / Discharge Order")
+        dots <- list(~med.type == "Prescription / Discharge Order")
     }
+    x <- dplyr::filter_(pt.data, .dots = dots)
 
-    # filter to desired meds, then spread into wide data set by med name or
-    # class
-    tmp <- pt.data %>%
-        mutate(med = stringr::str_to_lower(med)) %>%
-        filter(med %in% lookup.meds) %>%
-        left_join(meds, by = c("med" = "med.name")) %>%
-        mutate(group = ifelse(is.na(med.class), med, med.class),
-               value = TRUE) %>%
-        select(pie.id, group, value) %>%
-        group_by(pie.id, group) %>%
-        distinct %>%
-        tidyr::spread(group, value, fill = FALSE, drop = FALSE) %>%
-        full_join(select(patients, pie.id), by = "pie.id") %>%
-        mutate_each(funs(ifelse(is.na(.), FALSE, .)), -pie.id)
+    # make all meds lowercase for comparisons
+    dots <- list(~stringr::str_to_lower(med))
+    x <- dplyr::mutate_(x, .dots = setNames(dots, "med"))
 
-    return(tmp)
+    # filter to meds in lookup
+    dots <- list(~med %in% lookup.meds)
+    x <- dplyr::filter_(x, .dots = dots)
+
+    # join with list of meds to get class names
+    x <- dplyr::left_join(x, meds, by = c("med" = "med.name"))
+
+    # use the medication name or class to group by
+    dots <- list(~ifelse(is.na(med.class), med, med.class),
+                 lazyeval::interp("y", y = TRUE))
+    nm <- c("group", "value")
+    x <- dplyr::mutate_(x, .dots = setNames(dots, nm))
+
+    # select only the pie.id, group, and value columns
+    x <- dplyr::select_(x, .dots = list("pie.id", "group", "value"))
+
+    # remove any duplicate patient / group combinations
+    x <- dplyr::distinct_(x, .dots = list("pie.id", "group"))
+
+    # convert the data to wide format
+    x <- tidyr::spread_(x, "group", "value", fill = FALSE, drop = FALSE)
+
+    # join with list of all patients, fill in values of FALSE for any patients
+    # not in the data set
+    pts <- dplyr::select_(patients, "pie.id")
+    x <- dplyr::full_join(x, pts, by = "pie.id")
+    x <- dplyr::mutate_each_(x, funs(fill_false), list(quote(-pie.id)))
+
+    return(x)
 }
 
 #' Tidy continuous medications

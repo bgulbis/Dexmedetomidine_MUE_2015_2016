@@ -7,10 +7,10 @@
 read_data(data.dir, file.name)
 }
 \arguments{
-\item{data.dir}{A character with the name of the directory containing the
+\item{data.dir}{A character string with the name of the directory containing the
 data files}
 
-\item{pattern}{A character with name of data file or pattern to match}
+\item{file.name}{A character string with name of data file or pattern to match}
 }
 \value{
 A data frame

@@ -11,7 +11,8 @@ tidy_diagnosis(ref.data, pt.data, patients)
 
 \item{pt.data}{A data frame with all patient diagnosis codes}
 
-\item{patients}{A data frame with a column pie.id including all patients in study}
+\item{patients}{A data frame with a column pie.id including all patients in
+study}
 }
 \value{
 A data frame
