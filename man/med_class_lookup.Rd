@@ -13,12 +13,12 @@ med_class_lookup(meds)
 A data frame with columns: med.class and med.name
 }
 \description{
-\code{med_class_lookup} takes a vector of medication generic names and returns the
-classes which contain those medications
+\code{med_class_lookup} takes a vector of medication generic names and
+returns the classes which contain those medications
 }
 \details{
-This function takes a character vector of medication generic names and returns a data
-frame with all of the medication classes that contain those medications. The
-data frame will contain two columns: med.class and med.name.
+This function takes a character vector of medication generic names and
+returns a data frame with all of the medication classes that contain those
+medications. The data frame will contain two columns: med.class and med.name.
 }
 
