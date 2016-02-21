@@ -18,6 +18,9 @@
 #'
 #' @export
 calc_runtime <- function(cont.data, units = "hours") {
+    # group the data by pie.id and med
+    cont.data <- dplyr::group_by_(cont.data, .dots = list("pie.id", "med"))
+
     # get the end of the infusion
     dots <- list(~dplyr::last(med.datetime))
     cont.end <- dplyr::summarize_(cont.data, .dots = setNames(dots, "last.datetime"))
@@ -79,7 +82,8 @@ summarize_cont_meds <- function(cont.data, units = "hours") {
     summary.data <- dplyr::inner_join(summary.data, nz.rate, by = c("pie.id", "med"))
 
     # calculate the time-weighted average
-    summary.data <- dplyr::mutate_(summary.data, .dots = setNames(~auc / duration, "time.wt.avg"))
+    dots <- list(~auc/duration)
+    summary.data <- dplyr::mutate_(summary.data, .dots = setNames(dots, "time.wt.avg"))
 
     return(summary.data)
 }

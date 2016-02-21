@@ -202,28 +202,31 @@ tidy_meds_outpt <- function(ref.data, pt.data, patients, home = TRUE) {
 #'
 #' @return A data frame
 #'
-#' @import dplyr
-#'
 tidy_meds_cont <- function(ref.data, cont.data, sched.data, patients) {
-    # tidy continuous meds
-    ref.data <- filter(ref.data, group == "cont")
+    # filter to tidy only continuous meds
+    ref.data <- dplyr::filter_(ref.data, .dots = list(~group == "cont"))
 
     # for any med classes, lookup the meds included in the class
-    class.meds <- filter(ref.data, type == "class")
+    class.meds <- dplyr::filter_(ref.data, .dots = list(~type == "class"))
     class.meds <- med_lookup(class.meds$name)
 
     # join the list of meds with any indivdual meds included
-    lookup.meds <- filter(ref.data, type == "med")
+    lookup.meds <- dplyr::filter_(ref.data, .dots = list(~type == "med"))
     lookup.meds <- c(lookup.meds$name, class.meds$med.name)
 
-    # remove any rows in continuous data which are actually scheduled doses and
-    # filter to desired meds
-    cont.data <- anti_join(cont.data, sched.data, by = "event.id") %>%
-        mutate(med = stringr::str_to_lower(med)) %>%
-        filter(med %in% lookup.meds) %>%
-        ungroup %>%
-        group_by(pie.id, med) %>%
-        arrange(med.datetime)
+    # remove any rows in continuous data which are actually scheduled doses
+    x <- dplyr::anti_join(cont.data, sched.data, by = "event.id")
 
-    return(cont.data)
+    # make all meds lowercase for comparisons
+    dots <- list(~stringr::str_to_lower(med))
+    x <- dplyr::mutate_(x, .dots = setNames(dots, "med"))
+
+    # filter to meds in lookup
+    dots <- list(~med %in% lookup.meds)
+    x <- dplyr::filter_(x, .dots = dots)
+
+    # sort by pie.id, med, med.datetime
+    x <- dplyr::arrange_(x, .dots = list("pie.id", "med", "med.datetime"))
+
+    return(x)
 }

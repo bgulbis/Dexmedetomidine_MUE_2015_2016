@@ -16,8 +16,6 @@
 #'
 #' @return A data frame
 #'
-#' @import dplyr
-#'
 #' @export
 read_edw_data <- function(data.dir, file.name, type = NA) {
     # if type is NA, then set type to file.name
@@ -46,14 +44,16 @@ read_edw_data <- function(data.dir, file.name, type = NA) {
 #'
 #' @return A data frame
 #'
-#' @import dplyr
-#'
 #' @export
 read_data <- function(data.dir, file.name) {
-    raw <- list.files(data.dir, pattern = file.name, full.names = TRUE) %>%
-        lapply(read.csv, colClasses = "character") %>%
-        bind_rows %>%
-        distinct
+    # get list of files is specified directory and matching file name
+    raw <- list.files(data.dir, pattern = file.name, full.names = TRUE)
+    # loop through all matching files and read in to list
+    raw <- lapply(raw, read.csv, colClasses = "character")
+    # take list of files and bind them together into a data frame
+    raw <- dplyr::bind_rows(raw)
+    # remove any duplicate rows
+    raw <- dplyr::distinct_(raw)
 
     return(raw)
 }
@@ -76,101 +76,122 @@ read_data <- function(data.dir, file.name) {
 #'
 #' @return A data frame
 #'
-#' @import dplyr
-#'
 tidy_edw_data <- function(raw.data, type) {
 
+    # set field modifications (dots) and names of columns (nm)
     if (type == "blood") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               blood.datetime = lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                               blood.prod = Clinical.Event,
-                               blood.type = factor(Clinical.Event.Result))
+        dots <- list("PowerInsight.Encounter.Id",
+                     ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
+                     ~factor(Clinical.Event),
+                     "Clinical.Event.Result")
+        nm <- c("pie.id", "blood.datetime", "blood.prod", "blood.type")
 
     } else if (type == "demographics") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                   person.id = Person.ID,
-                   age = as.numeric(Age..Years..Visit.),
-                   sex = factor(Sex, exclude = c("", "Unknown")),
-                   race = factor(Race, exclude = c("", "Unknown")),
-                   disposition = factor(Discharge.Disposition),
-                   los = as.numeric(LOS..Actual.),
-                   visit.type = factor(Encounter.Type))
+        dots <- list("PowerInsight.Encounter.Id",
+                     "Person.ID",
+                     ~as.numeric(Age..Years..Visit.),
+                     ~factor(Sex, exclude = c("", "Unknown")),
+                     ~factor(Race, exclude = c("", "Unknown")),
+                     ~factor(Discharge.Disposition),
+                     ~as.numeric(LOS..Actual.),
+                     ~factor(Encounter.Type))
+        nm <- c("pie.id", "person.id", "age", "sex", "race", "disposition",
+                "los", "visit.type")
 
     } else if (type == "diagnosis") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               diag.code = ICD9.Diagnosis.Code,
-                               diag.type = factor(Diagnosis.Type, exclude = ""),
-                               diag.seq = factor(Diagnosis.Code.Sequence))
+        dots <- list("PowerInsight.Encounter.Id",
+                     "ICD9.Diagnosis.Code",
+                     ~factor(Diagnosis.Type, exclude = ""),
+                     ~factor(Diagnosis.Code.Sequence))
+        nm <- c("pie.id", "diag.code", "diag.type", "diag.seq")
 
     } else if (type == "home_meds") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               med = Order.Catalog.Short.Description,
-                               order.name = Order.Catalog.Mnemonic,
-                               med.type = factor(Orig.Orderable.Type.Flag.Desc))
+        dots <- list("PowerInsight.Encounter.Id",
+                     "Order.Catalog.Short.Description",
+                     "Order.Catalog.Mnemonic",
+                     ~factor(Orig.Orderable.Type.Flag.Desc))
+        nm <- c("pie.id", "med", "order.name", "med.type")
 
     } else if (type == "labs") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               lab.datetime = lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                               lab = Clinical.Event,
-                               lab.result = Clinical.Event.Result)
+        dots <- list("PowerInsight.Encounter.Id",
+                     ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
+                     "Clinical.Event",
+                     "Clinical.Event.Result")
+        nm <- c("pie.id", "lab.datetime", "lab", "lab.result")
 
     } else if (type == "measures") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               measure.datetime = lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                               measure = Clinical.Event,
-                               measure.result = as.numeric(Clinical.Event.Result),
-                               measure.units = factor(Clinical.Event.Result.Units))
+        dots <- list("PowerInsight.Encounter.Id",
+                     ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
+                     "Clinical.Event",
+                     ~as.numeric(Clinical.Event.Result),
+                     ~factor(Clinical.Event.Result.Units))
+        nm <- c("pie.id", "measure.datetime", "measure", "measure.result",
+                "measure.units")
 
     } else if (type == "meds_continuous") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               med.datetime = lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                               med = Clinical.Event,
-                               med.rate = as.numeric(Infusion.Rate),
-                               med.rate.units = factor(Infusion.Rate.Unit, exclude = ""),
-                               event.id = Event.ID)
+        dots <- list("PowerInsight.Encounter.Id",
+                     ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
+                     "Clinical.Event",
+                     ~as.numeric(Infusion.Rate),
+                     ~factor(Infusion.Rate.Unit, exclude = ""),
+                     "Event.ID")
+        nm <- c("pie.id", "med.datetime", "med", "med.rate", "med.rate.units",
+                "event.id")
 
     } else if (type == "meds_sched") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               med.datetime = lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                               med = Clinical.Event,
-                               med.dose = as.numeric(Dosage.Amount),
-                               med.dose.units = factor(Dosage.Unit, exclude = ""),
-                               med.route = factor(Route.of.Administration...Short, exclude = ""),
-                               event.id = Event.ID)
+        dots <- list("PowerInsight.Encounter.Id",
+                     ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
+                     "Clinical.Event",
+                     ~as.numeric(Dosage.Amount),
+                     ~factor(Dosage.Unit, exclude = ""),
+                     ~factor(Route.of.Administration...Short, exclude = ""),
+                     "Event.ID")
+        nm <- c("pie.id", "med.datetime", "med", "med.dose", "med.dose.units",
+                "med.route", "event.id")
 
     } else if (type == "meds_sched_freq") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               med.datetime = lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                               med = Clinical.Event,
-                               med.dose = as.numeric(Dosage.Amount),
-                               med.dose.units = factor(Dosage.Unit, exclude = ""),
-                               med.route = factor(Route.of.Administration...Short, exclude = ""),
-                               freq = Parent.Order.Frequency.Description,
-                               event.id = Event.ID)
+        dots <- list("PowerInsight.Encounter.Id",
+                     ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
+                     "Clinical.Event",
+                     ~as.numeric(Dosage.Amount),
+                     ~factor(Dosage.Unit, exclude = ""),
+                     ~factor(Route.of.Administration...Short, exclude = ""),
+                     "Parent.Order.Frequency.Description",
+                     "Event.ID")
+        nm <- c("pie.id", "med.datetime", "med", "med.dose", "med.dose.units",
+                "med.route", "freq", "event.id")
 
     } else if (type == "procedures") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               proc.date = lubridate::ymd_hms(Procedure.Date.and.Time),
-                               proc.code = ICD9.Procedure.Code)
+        dots <- list("PowerInsight.Encounter.Id",
+                     ~lubridate::ymd_hms(Procedure.Date.and.Time),
+                     "ICD9.Procedure.Code")
+        nm <- c("pie.id", "proc.date", "proc.code")
 
     } else if (type == "radiology") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               rad.datetime = lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                               rad.type = Clinical.Event)
+        dots <- list("PowerInsight.Encounter.Id",
+                     ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
+                     "Clinical.Event")
+        nm <- c("pie.id", "rad.datetime", "rad.type")
 
     } else if (type == "surgeries") {
-        tidy.data <- transmute(raw.data, pie.id = PowerInsight.Encounter.Id,
-                               surg.start.datetime = lubridate::ymd_hms(Start.Date.Time),
-                               surg.stop.datetime = lubridate::ymd_hms(Stop.Date.Time),
-                               surgery = Procedure,
-                               add.on = ifelse(Add.On.Indicator == 1, TRUE, FALSE),
-                               asa.class = factor(ASA.Class, exclude = ""),
-                               primary.proc = ifelse(Primary.Procedure.Indicator == 1, TRUE, FALSE))
+        dots <- list("PowerInsight.Encounter.Id",
+                     ~lubridate::ymd_hms(Start.Date.Time),
+                     ~lubridate::ymd_hms(Stop.Date.Time),
+                     "Procedure",
+                     ~ifelse(Add.On.Indicator == 1, TRUE, FALSE),
+                     ~factor(ASA.Class, exclude = ""),
+                     ~ifelse(Primary.Procedure.Indicator == 1, TRUE, FALSE))
+        nm <- c("pie.id", "surg.start.datetime", "surg.stop.datetime",
+                "surgery", "add.on", "asa.class", "primary.proc")
 
     } else {
         print("Invalid type")
         return(NULL)
     }
+
+    # apply the parameters to the columns, remove any remaining columns
+    tidy.data <- dplyr::transmute_(raw.data, .dots = setNames(dots, nm))
+
     return(tidy.data)
 }
 
