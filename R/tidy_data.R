@@ -6,7 +6,7 @@
 #'
 #' This function calls the underlying tidy function based on the value passed to
 #' the type parameter and returns the tidy data frame. Valid options for type
-#' are: diagnosis, meds_cont, meds_outpt.
+#' are: diagnosis, meds_cont, meds_outpt, meds_sched.
 #'
 #' @param type A character indicating what type of data is being tidied
 #' @param ... parameters to pass on to the underlying tidy function
@@ -30,6 +30,8 @@ tidy_data <- function(type, ...) {
         }
     } else if (type == "meds_cont") {
         y <- tidy_meds_cont(x$ref.data, x$cont.data, x$sched.data, x$patients)
+    } else if (type == "meds_sched") {
+        y <- tidy_meds_sched(x$ref.data, x$sched.data, x$patients)
     } else {
         y <- "Invalid type"
     }
@@ -187,7 +189,7 @@ tidy_meds_outpt <- function(ref.data, pt.data, patients, home = TRUE) {
 #'
 #' This function takes a data frame with reference medications or medication
 #' classes and data frames with all continuous and scheduled medications, and
-#' returns a data frame with a logical for each medication for each patient. The
+#' returns a data frame with only the desired medications for each patient. The
 #' data frame passed to ref.data should contain three columns: name, type, and
 #' group. The name column should contain either generic medication names or
 #' medication classes. The type column should specify whether the value in name
@@ -220,6 +222,52 @@ tidy_meds_cont <- function(ref.data, cont.data, sched.data, patients) {
     # make all meds lowercase for comparisons
     dots <- list(~stringr::str_to_lower(med))
     x <- dplyr::mutate_(x, .dots = setNames(dots, "med"))
+
+    # filter to meds in lookup
+    dots <- list(~med %in% lookup.meds)
+    x <- dplyr::filter_(x, .dots = dots)
+
+    # sort by pie.id, med, med.datetime
+    x <- dplyr::arrange_(x, .dots = list("pie.id", "med", "med.datetime"))
+
+    return(x)
+}
+
+#' Tidy scheduled medications
+#'
+#' \code{tidy_meds_sched} determines which patients have the desired medications
+#'
+#' This function takes a data frame with reference medications or medication
+#' classes and a data frames with all scheduled medications, and
+#' returns a data frame with only the desired medications for each patient. The
+#' data frame passed to ref.data should contain three columns: name, type, and
+#' group. The name column should contain either generic medication names or
+#' medication classes. The type column should specify whether the value in name
+#' is a "class" or "med". The group column should specify whether the medication
+#' is a continous or scheduled medication.
+#'
+#' @param ref.data A data frame with three columns: name, type, and group
+#' @param sched.data A data frame with all scheduled medications
+#' @param patients A data frame with a column pie.id including all patients in
+#'   study
+#'
+#' @return A data frame
+#'
+tidy_meds_sched <- function(ref.data, sched.data, patients) {
+    # filter to tidy only scheduled meds
+    ref.data <- dplyr::filter_(ref.data, .dots = list(~group == "sched"))
+
+    # for any med classes, lookup the meds included in the class
+    class.meds <- dplyr::filter_(ref.data, .dots = list(~type == "class"))
+    class.meds <- med_lookup(class.meds$name)
+
+    # join the list of meds with any indivdual meds included
+    lookup.meds <- dplyr::filter_(ref.data, .dots = list(~type == "med"))
+    lookup.meds <- c(lookup.meds$name, class.meds$med.name)
+
+    # make all meds lowercase for comparisons
+    dots <- list(~stringr::str_to_lower(med))
+    x <- dplyr::mutate_(sched.data, .dots = setNames(dots, "med"))
 
     # filter to meds in lookup
     dots <- list(~med %in% lookup.meds)

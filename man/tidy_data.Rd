@@ -20,6 +20,6 @@ A data frame
 \details{
 This function calls the underlying tidy function based on the value passed to
 the type parameter and returns the tidy data frame. Valid options for type
-are: diagnosis, meds_cont, meds_outpt.
+are: diagnosis, meds_cont, meds_outpt, meds_sched.
 }
 
