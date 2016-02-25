@@ -67,8 +67,8 @@ read_data <- function(data.dir, file.name) {
 #' a character vector indicating the type of data being tidied, and will return
 #' a tidied data frame. Valid options for type include: blood, demographics,
 #' diagnosis, home_meds, icu_score, id, labs, location, measures,
-#' meds_continuous, meds_freq, meds_sched, meds_sched_freq, mpp, procedures,
-#' surgeries, radiology, vent, vitals, warfarin.
+#' meds_continuous, meds_freq, meds_sched, meds_sched_freq, mpp, problems,
+#' procedures, surgeries, radiology, vent, vitals, warfarin.
 #'
 #'
 #' @param raw.data A data frame with raw data from EDW
@@ -166,6 +166,21 @@ tidy_edw_data <- function(raw.data, type) {
                      "Event.ID")
         nm <- c("pie.id", "med.datetime", "med", "med.dose", "med.dose.units",
                 "med.route", "freq", "event.id")
+
+    } else if (type == "problems") {
+        dots <- list("PowerInsight.Encounter.Id",
+                     "Problem...Description",
+                     ~factor(Problem.Classification, exclude = ""),
+                     ~factor(Problem.Confirmation.Status, exclude = ""),
+                     ~factor(Problem.Free.Text, exclude = ""),
+                     ~factor(Problem.Severity, exclude = ""),
+                     ~factor(Problem.Source.Active.Indicator, exclude = ""),
+                     ~lubridate::ymd_hms(Problem.Onset.Date...Time),
+                     ~factor(Problem.Life.Cycle, exclude = ""),
+                     ~lubridate::ymd_hms(Problem.Life.Cycle.Date...Time))
+        nm <- c("pie.id", "problem", "classification", "confirm", "free.text",
+                "severity", "active", "onset.datetime", "life.cycle",
+                "life.cycle.datetime")
 
     } else if (type == "procedures") {
         dots <- list("PowerInsight.Encounter.Id",
