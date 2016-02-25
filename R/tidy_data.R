@@ -278,3 +278,29 @@ tidy_meds_sched <- function(ref.data, sched.data, patients) {
 
     return(x)
 }
+
+#' Filter values to specified date range
+#'
+#' \code{filter_dates} determines which patients have the desired medications
+#'
+#' This function takes a data frame with reference medications or medication
+#' classes and a data frames with all scheduled medications, and
+#' returns a data frame with only the desired medications for each patient. The
+#' data frame passed to ref.data should contain three columns: name, type, and
+#' group. The name column should contain either generic medication names or
+#' medication classes. The type column should specify whether the value in name
+#' is a "class" or "med". The group column should specify whether the medication
+#' is a continous or scheduled medication.
+#'
+#' @param data A data frame with three columns: name, type, and group
+#' @param criteria A data frame with all scheduled medications
+#' @param dots A data frame with a column pie.id including all patients in
+#'   study
+#'
+#' @return A data frame
+#'
+filter_dates <- function(data, criteria, dots) {
+    # dots = list of fields to use for filtering?
+    return(x)
+}
+
