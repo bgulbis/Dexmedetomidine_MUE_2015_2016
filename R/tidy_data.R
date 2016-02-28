@@ -301,6 +301,6 @@ tidy_meds_sched <- function(ref.data, sched.data, patients) {
 #'
 filter_dates <- function(data, criteria, dots) {
     # dots = list of fields to use for filtering?
-    return(x)
+    # return(x)
 }
 

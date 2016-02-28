@@ -33,7 +33,8 @@ icd9_lookup <- function(df, procedure = FALSE) {
     # find the ICD9 codes for the desired exclusions by CCS code
     ccs <- dplyr::filter_(df, .dots = list(~type == "CCS"))
     # make all CCS codes numeric
-    ccs <- dplyr::mutate_(ccs, .dots = list(~as.numeric(code)))
+    dots <- list(~as.numeric(code))
+    ccs <- dplyr::mutate_(ccs, .dots = setNames(dots, "ccs.code"))
     # join CCS list with data
     ccs <- dplyr::inner_join(ccs, data, by = "ccs.code")
 
