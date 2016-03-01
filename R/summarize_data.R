@@ -87,3 +87,36 @@ summarize_cont_meds <- function(cont.data, units = "hours") {
 
     return(summary.data)
 }
+
+
+#' Determine if a lab changed by a set amount within a specific time frame
+#'
+#' \code{lab_change} checks for changes in lab values
+#'
+#' This function takes a data frame with continuous medication rate data and
+#' produces a data frame with summary data for each patient and medication. The
+#' calculations include: first rate, last rate, minimum rate, maximum rate, AUC,
+#' time-weighted average rate, total infusion duration, total infusion running
+#' time, and cumulative dose.
+#'
+#' @param lab.data A data frame with continuous medication rate data
+#' @param back An optional numeric specifying the number of days back to go.
+#'   Defaults to 2 days.
+#' @param units An optional character string specifying the time units to use in
+#'   calculations, default is hours
+#'
+#' @return A data frame
+#'
+#' @export
+lab_change <- function(lab.data, back = 2, units = "days") {
+    # calculate the number of days to go back
+    dots <- list(~count_rowsback(lab.datetime))
+    lab.data <- mutate_(lab.data, .dots = setNames(dots, "rowsback"))
+
+    # calculate the running max during the time window
+    dots <- list(~zoo::rollapplyr(as.numeric(lab.result), rowsback, max, fill = NA,
+                                  partial = TRUE))
+    lab.data <- mutate_(lab.data, .dots = setNames(dots, "runmax"))
+
+    return(lab.data)
+}
