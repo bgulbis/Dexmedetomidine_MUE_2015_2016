@@ -39,20 +39,7 @@ tidy_data <- function(type, ...) {
     return(y)
 }
 
-#' Fill NA with FALSE
-#'
-#' \code{fill_false} returns FALSE if the value is NA, otherwise returns the
-#' original value
-#'
-#' This function takes a value and checks if it is NA. If it is NA it will
-#' return FALSE, otherwise it will return the original value. This can be used
-#' to fill data frame rows which are all NA but should be FALSE. with reference
-#' diagnosis codes and a data
-#'
-#' @param y A value
-#'
-#' @return Either FALSE or the original value
-#'
+# Change NA to FALSE
 fill_false <- function(y) {
     ifelse(is.na(y), FALSE, y)
 }

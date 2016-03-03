@@ -82,7 +82,7 @@ tidy_edw_data <- function(raw.data, type) {
     if (type == "blood") {
         dots <- list("PowerInsight.Encounter.Id",
                      ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                     ~factor(Clinical.Event),
+                     ~stringr::str_to_lower(Clinical.Event),
                      "Clinical.Event.Result")
         nm <- c("pie.id", "blood.datetime", "blood.prod", "blood.type")
 
@@ -117,7 +117,7 @@ tidy_edw_data <- function(raw.data, type) {
 
     } else if (type == "home_meds") {
         dots <- list("PowerInsight.Encounter.Id",
-                     "Order.Catalog.Short.Description",
+                     ~stringr::str_to_lower(Order.Catalog.Short.Description),
                      "Order.Catalog.Mnemonic",
                      ~factor(Orig.Orderable.Type.Flag.Desc))
         nm <- c("pie.id", "med", "order.name", "med.type")
@@ -131,14 +131,14 @@ tidy_edw_data <- function(raw.data, type) {
     } else if (type == "labs") {
         dots <- list("PowerInsight.Encounter.Id",
                      ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                     "Clinical.Event",
+                     ~stringr::str_to_lower(Clinical.Event),
                      "Clinical.Event.Result")
         nm <- c("pie.id", "lab.datetime", "lab", "lab.result")
 
     } else if (type == "measures") {
         dots <- list("PowerInsight.Encounter.Id",
                      ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                     "Clinical.Event",
+                     ~stringr::str_to_lower(Clinical.Event),
                      ~as.numeric(Clinical.Event.Result),
                      ~factor(Clinical.Event.Result.Units))
         nm <- c("pie.id", "measure.datetime", "measure", "measure.result",
@@ -147,7 +147,7 @@ tidy_edw_data <- function(raw.data, type) {
     } else if (type == "meds_continuous") {
         dots <- list("PowerInsight.Encounter.Id",
                      ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                     "Clinical.Event",
+                     ~stringr::str_to_lower(Clinical.Event),
                      ~as.numeric(Infusion.Rate),
                      ~factor(Infusion.Rate.Unit, exclude = ""),
                      "Event.ID")
@@ -157,7 +157,7 @@ tidy_edw_data <- function(raw.data, type) {
     } else if (type == "meds_sched") {
         dots <- list("PowerInsight.Encounter.Id",
                      ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                     "Clinical.Event",
+                     ~stringr::str_to_lower(Clinical.Event),
                      ~as.numeric(Dosage.Amount),
                      ~factor(Dosage.Unit, exclude = ""),
                      ~factor(Route.of.Administration...Short, exclude = ""),
@@ -168,7 +168,7 @@ tidy_edw_data <- function(raw.data, type) {
     } else if (type == "meds_sched_freq") {
         dots <- list("PowerInsight.Encounter.Id",
                      ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                     "Clinical.Event",
+                     ~stringr::str_to_lower(Clinical.Event),
                      ~as.numeric(Dosage.Amount),
                      ~factor(Dosage.Unit, exclude = ""),
                      ~factor(Route.of.Administration...Short, exclude = ""),
