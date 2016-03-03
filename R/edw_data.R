@@ -82,7 +82,7 @@ tidy_edw_data <- function(raw.data, type) {
     if (type == "blood") {
         dots <- list("PowerInsight.Encounter.Id",
                      ~lubridate::ymd_hms(Clinical.Event.End.Date.Time),
-                     ~stringr::str_to_lower(Clinical.Event),
+                     ~assign_blood_prod(stringr::str_to_lower(Clinical.Event)),
                      "Clinical.Event.Result")
         nm <- c("pie.id", "blood.datetime", "blood.prod", "blood.type")
 
@@ -226,3 +226,26 @@ tidy_edw_data <- function(raw.data, type) {
     return(tidy.data)
 }
 
+# evaluate clinical event and determine which blood product was given
+assign_blood_prod <- function(event) {
+
+    # sub-function to evaluate each row
+    get_prod <- function(x) {
+        if(str_detect(x, "cryo")) {
+            prod <- "cryo"
+        } else if(str_detect(x, "ffp")) {
+            prod <- "ffp"
+        } else if(str_detect(x, "rbc")) {
+            prod <- "prbc"
+        } else if(str_detect(x, "platelet")) {
+            prod <- "platelet"
+        } else {
+            prod <- "unknown"
+        }
+    }
+
+    # loop through each element of the vector; returns a new vector with a
+    # string identifying the product type for each element in the original
+    # vector
+    sapply(event, get_prod)
+}
