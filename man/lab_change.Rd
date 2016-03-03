@@ -4,16 +4,17 @@
 \alias{lab_change}
 \title{Determine if a lab changed by a set amount within a specific time frame}
 \usage{
-lab_change(lab.data, back = 2, units = "days")
+lab_change(lab.data, change.by, FUN, back = 2)
 }
 \arguments{
-\item{lab.data}{A data frame with continuous medication rate data}
+\item{lab.data}{A data frame with lab data}
+
+\item{change.by}{A numeric indicating the threshold for lab changes}
+
+\item{FUN}{A function for rollapplyr, most commonly max or min}
 
 \item{back}{An optional numeric specifying the number of days back to go.
 Defaults to 2 days.}
-
-\item{units}{An optional character string specifying the time units to use in
-calculations, default is hours}
 }
 \value{
 A data frame
@@ -22,10 +23,18 @@ A data frame
 \code{lab_change} checks for changes in lab values
 }
 \details{
-This function takes a data frame with continuous medication rate data and
-produces a data frame with summary data for each patient and medication. The
-calculations include: first rate, last rate, minimum rate, maximum rate, AUC,
-time-weighted average rate, total infusion duration, total infusion running
-time, and cumulative dose.
+This function takes a data frame with lab data for a single lab and checks
+whether the lab changes by a certain amount within a given period of time.
+The parameters should include: change.by, the threshold which the lab must
+change by; FUN, the function passed to rollapplyr; back, the time frame that
+the lab change must occur in. For FUN, use max when looking for a decrease in
+lab value, and min when looking for an increase in lab value.
+}
+\examples{
+\dontrun{
+lab_change(data, -2, max, back = 2)
+# checks for a >= 2 decrease in the lab value within the past 2 days
+}
+
 }
 

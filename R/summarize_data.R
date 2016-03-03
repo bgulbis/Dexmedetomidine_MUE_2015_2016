@@ -93,30 +93,44 @@ summarize_cont_meds <- function(cont.data, units = "hours") {
 #'
 #' \code{lab_change} checks for changes in lab values
 #'
-#' This function takes a data frame with continuous medication rate data and
-#' produces a data frame with summary data for each patient and medication. The
-#' calculations include: first rate, last rate, minimum rate, maximum rate, AUC,
-#' time-weighted average rate, total infusion duration, total infusion running
-#' time, and cumulative dose.
+#' This function takes a data frame with lab data for a single lab and checks
+#' whether the lab changes by a certain amount within a given period of time.
+#' The parameters should include: change.by, the threshold which the lab must
+#' change by; FUN, the function passed to rollapplyr; back, the time frame that
+#' the lab change must occur in. For FUN, use max when looking for a decrease in
+#' lab value, and min when looking for an increase in lab value.
 #'
-#' @param lab.data A data frame with continuous medication rate data
+#' @param lab.data A data frame with lab data
+#' @param change.by A numeric indicating the threshold for lab changes
+#' @param FUN A function for rollapplyr, most commonly max or min
 #' @param back An optional numeric specifying the number of days back to go.
 #'   Defaults to 2 days.
-#' @param units An optional character string specifying the time units to use in
-#'   calculations, default is hours
 #'
 #' @return A data frame
 #'
+#' @examples
+#' \dontrun{
+#' lab_change(data, -2, max, back = 2)
+#' # checks for a >= 2 decrease in the lab value within the past 2 days
+#' }
+#'
 #' @export
-lab_change <- function(lab.data, back = 2, units = "days") {
-    # calculate the number of days to go back
-    dots <- list(~count_rowsback(lab.datetime))
+lab_change <- function(lab.data, change.by, FUN, back = 2) {
+    # calculate the number of rows that are included within the window
+    dots <- list(~count_rowsback(lab.datetime, back))
     lab.data <- mutate_(lab.data, .dots = setNames(dots, "rowsback"))
 
-    # calculate the running max during the time window
-    dots <- list(~zoo::rollapplyr(as.numeric(lab.result), rowsback, max, fill = NA,
-                                  partial = TRUE))
-    lab.data <- mutate_(lab.data, .dots = setNames(dots, "runmax"))
+    # calculate the running min/max during the time window
+    dots <- list(~zoo::rollapplyr(as.numeric(lab.result), rowsback, FUN,
+                                  fill = NA, partial = TRUE))
+    lab.data <- mutate_(lab.data, .dots = setNames(dots, "running"))
+
+    # calcualte the change from the running min/max to current value
+    dots <- list(~as.numeric(lab.result) - running)
+    lab.data <- mutate_(lab.data, .dots = setNames(dots, "change"))
+
+    # filter values which exceed the change.by value
+    lab.data <- filter_(lab.data, .dots = list(~abs(change) >= abs(change.by)))
 
     return(lab.data)
 }
