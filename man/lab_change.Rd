@@ -11,7 +11,8 @@ lab_change(lab.data, change.by, FUN, back = 2)
 
 \item{change.by}{A numeric indicating the threshold for lab changes}
 
-\item{FUN}{A function for rollapplyr, most commonly max or min}
+\item{FUN}{A function for \code{\link[zoo]{rollapplyr}}, most commonly max or
+min}
 
 \item{back}{An optional numeric specifying the number of days back to go.
 Defaults to 2 days.}
@@ -26,9 +27,10 @@ A data frame
 This function takes a data frame with lab data for a single lab and checks
 whether the lab changes by a certain amount within a given period of time.
 The parameters should include: change.by, the threshold which the lab must
-change by; FUN, the function passed to rollapplyr; back, the time frame that
-the lab change must occur in. For FUN, use max when looking for a decrease in
-lab value, and min when looking for an increase in lab value.
+change by; FUN, the function passed to \code{\link[zoo]{rollapplyr}}; back,
+the time frame that the lab change must occur in. For FUN, use max when
+looking for a decrease in lab value, and min when looking for an increase in
+lab value.
 }
 \examples{
 \dontrun{
