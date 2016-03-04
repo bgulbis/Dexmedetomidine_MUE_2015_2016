@@ -2,40 +2,19 @@
 # 
 # estimate number of patients available for study
 
-library(dplyr)
-library(BGTools)
-library(stringr)
+source("library.R")
 
-proposal.dir <- "proposal_data"
-
+# get list of patients from charge data
 dexmed <- read_data(proposal.dir, "patients") %>%
-    distinct(PowerInsight.Encounter.Id)
+    transmute(pie.id = PowerInsight.Encounter.Id,
+              cdm = Cdm.Code,
+              cdm.desc = factor(Cdm.Desc),
+              service.date = ymd_hms(Service.Date),
+              inst.code = factor(Institution.Code),
+              inst.name = factor(Institution.Desc)) %>%
+    distinct(pie.id) 
 
-tmc <- filter(dexmed, Institution.Code == "A")
-mhhs <- filter(dexmed, Institution.Code == "B")
+# make list of encounters for EDW
+edw.pie <- concat_encounters(dexmed$pie.id, 500)
+print(edw.pie)
 
-tmp <- tmc$PowerInsight.Encounter.Id
-tmc.pie <- split(tmp, ceiling(seq_along(tmp)/500))
-tmc.pie <- lapply(tmc.pie, str_c, collapse=";")
-print(tmc.pie)
-
-tmp <- mhhs$PowerInsight.Encounter.Id
-mhhs.pie <- split(tmp, ceiling(seq_along(tmp)/500))
-mhhs.pie <- lapply(mhhs.pie, str_c, collapse=";")
-print(mhhs.pie)
-
-screen.dir <- "screen_data"
-
-raw.demograph <- read_edw_data(screen.dir, "demograph", "demographics") %>%
-    distinct %>%
-    filter(age >= 18) 
-
-# dexm.tmc <- list.files(proposal.dir, pattern = "dexmed - TMC", full.names = TRUE) %>%
-#    lapply(read.csv, colClasses = "character") %>%
-#    bind_rows %>%
-#    distinct
-
-# dexm.other <- list.files(proposal.dir, pattern = "dexmed - Other", full.names = TRUE) %>%
-#    lapply(read.csv, colClasses = "character") %>%
-#    bind_rows %>%
-#    distinct
