@@ -94,9 +94,10 @@ tidy_edw_data <- function(raw.data, type) {
                      ~factor(Race, exclude = c("", "Unknown")),
                      ~factor(Discharge.Disposition),
                      ~as.numeric(LOS..Actual.),
+                     ~factor(Person.Location..Facility..Curr., exclude = ""),
                      ~factor(Encounter.Type))
         nm <- c("pie.id", "person.id", "age", "sex", "race", "disposition",
-                "los", "visit.type")
+                "los", "facility", "visit.type")
 
     } else if (type == "diagnosis") {
         dots <- list("PowerInsight.Encounter.Id",

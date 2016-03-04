@@ -3,6 +3,7 @@
 export(apache_score)
 export(calc_runtime)
 export(calculate_crcl)
+export(concat_encounters)
 export(count_rowsback)
 export(filter_dates)
 export(gzip_files)
