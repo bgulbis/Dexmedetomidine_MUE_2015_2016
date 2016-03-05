@@ -232,13 +232,13 @@ assign_blood_prod <- function(event) {
 
     # sub-function to evaluate each row
     get_prod <- function(x) {
-        if(str_detect(x, "cryo")) {
+        if(stringr::str_detect(x, "cryo")) {
             prod <- "cryo"
-        } else if(str_detect(x, "ffp")) {
+        } else if(stringr::str_detect(x, "ffp")) {
             prod <- "ffp"
-        } else if(str_detect(x, "rbc")) {
+        } else if(stringr::str_detect(x, "rbc")) {
             prod <- "prbc"
-        } else if(str_detect(x, "platelet")) {
+        } else if(stringr::str_detect(x, "platelet")) {
             prod <- "platelet"
         } else {
             prod <- "unknown"
