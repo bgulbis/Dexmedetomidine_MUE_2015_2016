@@ -56,12 +56,23 @@ ref.dexmed <- data.frame(name = "dexmedetomidine", type = "med", group = "cont",
 raw.meds.cont <- read_edw_data(data.dir, "meds_continuous")
 raw.meds.sched <- read_edw_data(data.dir, "meds_sched")
 
-data.dexmed <- tidy_data("meds_cont", ref.data = ref.dexmed, 
+tmp.dexmed <- tidy_data("meds_cont", ref.data = ref.dexmed, 
                            cont.data = raw.meds.cont, 
                            sched.data = raw.meds.sched,
-                           patients = data.demograph) %>%
-    calc_runtime %>%
-    summarize_cont_meds
+                           patients = data.demograph) 
+
+# fill_rate <- function(rate, units) {
+#     lapply(seq_along(rate), function(i) ifelse(is.na(units[i]), TRUE, FALSE))
+# }
+
+# get time between each row
+tmp.run <- calc_runtime(tmp.dexmed)
+
+tmp.sum <- summarize_cont_meds(tmp.run)
+
+
+# data.dexmed <- calc_runtime(tmp.dexmed) %>%
+#     summarize_cont_meds
 
 # tmp.bolus <- anti_join(data.demograph, data.dexmed, by = "pie.id")
 # 
@@ -74,4 +85,5 @@ data.dexmed <- tidy_data("meds_cont", ref.data = ref.dexmed,
 # raw.icu.assess <- read_edw_data(data.dir, "icu_assess")
 # raw.vent <- read_edw_data(data.dir, "vent")
 # raw.vitals <- read_edw_data(data.dir, "vitals")
+# raw.uop <- read_edw_data(data.dir, "uop")
 
