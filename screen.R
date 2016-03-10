@@ -61,14 +61,12 @@ tmp.dexmed <- tidy_data("meds_cont", ref.data = ref.dexmed,
                            sched.data = raw.meds.sched,
                            patients = data.demograph) 
 
-# fill_rate <- function(rate, units) {
-#     lapply(seq_along(rate), function(i) ifelse(is.na(units[i]), TRUE, FALSE))
-# }
+# get dexmed infusion information, separate into distinct infusions if off for >
+# 12 hours
+tmp.dexmed.run <- calc_runtime(tmp.dexmed)
 
-# get time between each row
-tmp.run <- calc_runtime(tmp.dexmed)
-
-tmp.sum <- summarize_cont_meds(tmp.run)
+# summarize drip information
+data.dexmed <- summarize_cont_meds(tmp.dexmed.run)
 
 
 # data.dexmed <- calc_runtime(tmp.dexmed) %>%
