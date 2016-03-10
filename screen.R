@@ -68,6 +68,9 @@ tmp.dexmed.run <- calc_runtime(tmp.dexmed)
 # summarize drip information
 data.dexmed <- summarize_cont_meds(tmp.dexmed.run)
 
+# % time above 0.4
+tmp.dexmed.perc <- calc_perc_time(tmp.dexmed.run, list(~med.rate > 0.2, ~med.rate < 0.6))
+
 
 # data.dexmed <- calc_runtime(tmp.dexmed) %>%
 #     summarize_cont_meds
