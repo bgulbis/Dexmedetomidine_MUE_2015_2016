@@ -68,17 +68,19 @@ tmp.dexmed.run <- calc_runtime(tmp.dexmed)
 # summarize drip information
 data.dexmed <- summarize_cont_meds(tmp.dexmed.run)
 
-# % time above 0.4
-tmp.dexmed.perc <- calc_perc_time(tmp.dexmed.run, list(~med.rate > 0.2, ~med.rate < 0.6))
+data.dexmed.sum <- data.dexmed %>%
+    group_by(pie.id, med) %>%
+    summarize(num.infusions = n(),
+              cum.dose = sum(cum.dose, na.rm = TRUE),
+              cum.duration = sum(duration, na.rm = TRUE),
+              cum.run.time = sum(run.time, na.rm = TRUE),
+              time.wt.avg = sum(auc, na.rm = TRUE) / sum(duration, na.rm = TRUE))
 
+pts.eligible <- data.dexmed.sum$pie.id
 
-# data.dexmed <- calc_runtime(tmp.dexmed) %>%
-#     summarize_cont_meds
+data.demograph <- filter(data.demograph, pie.id %in% pts.eligible)
 
-# tmp.bolus <- anti_join(data.demograph, data.dexmed, by = "pie.id")
-# 
-# tmp.sched <- raw.meds.sched %>%
-#     filter(str_detect(med, "dexmed"))
+pts.eligible <- data.demograph$pie.id
 
 # get raw data for all eligible patients
 # raw.measures <- read_edw_data(data.dir, "ht_wt", "measures")
