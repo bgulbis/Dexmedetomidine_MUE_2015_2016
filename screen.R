@@ -34,9 +34,7 @@ data.admit.dc <- raw.admit.dc %>%
     filter(admit.datetime >= mdy("07-01-2014"),
            discharge.datetime <= mdy("06-30-2015"))
 
-pts.eligible <- data.admit.dc$pie.id
-
-data.demograph <- filter(data.demograph, pie.id %in% pts.eligible)
+data.demograph <- semi_join(data.demograph, data.admit.dc, by = "pie.id")
 
 rm(raw.admit.dc)
 
@@ -50,25 +48,28 @@ data.locations <- raw.locations %>%
 rm(raw.locations)
 
 # get dexmedetomidine data 
-ref.dexmed <- data.frame(name = "dexmedetomidine", type = "med", group = "cont", 
-                         stringsAsFactors = FALSE)
+cont.meds <- c("dexmedetomidine", "lorazepam", "midazolam", "propofol", 
+               "ketamine", "fentanyl", "hydromorphone", "morphine")
+ref.cont.meds <- data_frame(name = cont.meds, type = "med", group = "cont")
 
 raw.meds.cont <- read_edw_data(data.dir, "meds_continuous")
 raw.meds.sched <- read_edw_data(data.dir, "meds_sched")
 
-tmp.dexmed <- tidy_data("meds_cont", ref.data = ref.dexmed, 
+tmp.meds.cont <- tidy_data("meds_cont", ref.data = ref.cont.meds, 
                            cont.data = raw.meds.cont, 
                            sched.data = raw.meds.sched,
                            patients = data.demograph) 
 
+rm(raw.meds.cont)
+
 # get dexmed infusion information, separate into distinct infusions if off for >
 # 12 hours
-tmp.dexmed.run <- calc_runtime(tmp.dexmed)
+tmp.meds.cont.run <- calc_runtime(tmp.meds.cont)
 
 # summarize drip information
-data.dexmed <- summarize_cont_meds(tmp.dexmed.run)
+data.meds.cont <- summarize_cont_meds(tmp.meds.cont.run)
 
-data.dexmed.sum <- data.dexmed %>%
+data.meds.cont.sum <- data.meds.cont %>%
     group_by(pie.id, med) %>%
     summarize(num.infusions = n(),
               cum.dose = sum(cum.dose, na.rm = TRUE),
@@ -76,11 +77,7 @@ data.dexmed.sum <- data.dexmed %>%
               cum.run.time = sum(run.time, na.rm = TRUE),
               time.wt.avg = sum(auc, na.rm = TRUE) / sum(duration, na.rm = TRUE))
 
-pts.eligible <- data.dexmed.sum$pie.id
-
-data.demograph <- filter(data.demograph, pie.id %in% pts.eligible)
-
-pts.eligible <- data.demograph$pie.id
+data.demograph <- semi_join(data.demograph, data.meds.cont.sum, by = "pie.id")
 
 # get raw data for all eligible patients
 # raw.measures <- read_edw_data(data.dir, "ht_wt", "measures")
@@ -89,4 +86,3 @@ pts.eligible <- data.demograph$pie.id
 # raw.vent <- read_edw_data(data.dir, "vent")
 # raw.vitals <- read_edw_data(data.dir, "vitals")
 # raw.uop <- read_edw_data(data.dir, "uop")
-
