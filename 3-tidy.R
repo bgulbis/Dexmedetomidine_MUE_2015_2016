@@ -42,6 +42,21 @@ data.meds.cont.sum <- data.meds.cont %>%
 
 data.demographics <- semi_join(data.demographics, data.meds.cont.sum, by = "pie.id")
 
+# lookup_location <- function(pt, start) {
+#     x <- filter(data.locations, pie.id = pt,
+#                 start >= arrive.datetime,
+#                 start <= depart.datetime) 
+#     x$location
+# }
+# 
+# # identify which units patients were in while on dexmedetomidine
+# tmp.dexmed.units <- select(data.meds.cont, pie.id:stop.datetime) %>%
+#     filter(med == "dexmedetomidine") %>%
+#     rowwise %>%
+#     mutate(location = lookup_location(pie.id, start.datetime))
+    
+
+
 # get raw data for all eligible patients
 # raw.measures <- read_edw_data(data.dir, "ht_wt", "measures")
 # raw.labs <- read_edw_data(data.dir, "labs")
