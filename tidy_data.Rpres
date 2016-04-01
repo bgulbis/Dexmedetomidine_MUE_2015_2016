@@ -45,7 +45,7 @@ Sources of Data
 * Public Data
     - Hospital Compare, Registries
 
-Types of Data
+Categories of Data
 ========================================================
 
 * Data comes in all shapes and sizes, but rarely does it come in a format ready for analysis
@@ -81,12 +81,16 @@ Principles of Tidy Data
 ========================================================
 
 * Each variable should be in one column
+    - Data within the column should be of the same type
 * Each observation of that variable should be in a different row
 * Variables of different “kinds” should be in different tables
-    - Each table should be stored in it’s own file
+    - Each table should be stored in it’s own **file**
     - Multiple tables should have a column which allows them to be linked
 * Variable names should be stored in the first row
     - Names should be readable
+    - Use minimal abbreviations
+        + Good: clinical_event, clinicalEvent
+        + Bad: clnevnt, ce, 
 
 <small>Wickham, H. Tidy data. J Stat Software 2014; 59 (10)</small>
 
@@ -100,4 +104,71 @@ Data Processing Tools
     - Databases (Access, MySQL, etc.)
 * Advanced
     - Programming languages (R, Python, Julia, etc.)
+
+Sharing Data
+========================================================
+
+* For faster anlaysis turnaround, include the following
+    - Raw data
+    - Tidy data
+    - Code book describing each variable
+    - List of instructions describing how you went from raw data to tidy data
+
+<small>https://github.com/jtleek/datasharing</small>
+
+Code Book
+========================================================
+
+* Information about the variables
+    - Units of measure
+* Information about the summary choices made
+* Information about the experimental study design used
+
+<small>https://github.com/jtleek/datasharing</small>
+
+Data Types
+========================================================
+
+* Continuous
+* Ordinal
+* Categorical
+* Missing
+    - Should be coded as NA
+* Censored
+    - Know something about the missing data
+    - Example: lab value outside detectable range
+    - Still coded as NA, but add a new column which indicates the data is censored
+
+<small>https://github.com/jtleek/datasharing</small>
+    
+File Formats for Sharing Data
+========================================================
+
+* Excel
+    - Usually works but not ideal
+    - All data should be on a single worksheet
+    - No columns or cells should be highlighted
+    - No macros should be used
+* Text Files
+    - Examples: CSV, TAB-delimited
+    - Highest degree of compatibility
+    - Only information in "cells" is retained
+
+<small>https://github.com/jtleek/datasharing</small>
+
+Sharing Data Example
+========================================================
+
+![messy shared data](figures/data_sharing_messy.png)
+
+Sharing Data Example
+========================================================
+
+```{r echo=FALSE}
+library(readxl)
+library(dplyr)
+share <- read_excel("data_sharing_example.xlsx") %>%
+    mutate_each(funs(factor), -(`Number of packs/day`:`Pak year`))
+summary(share)
+```
 
