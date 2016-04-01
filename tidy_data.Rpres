@@ -48,20 +48,19 @@ Sources of Data
 Categories of Data
 ========================================================
 
-* Data comes in all shapes and sizes, but rarely does it come in a format ready for analysis
 * Raw data
     - Original source of data
     - Hard to use for analysis
 * Processed data
     - Ready for analysis
-    - Performed merging, subsetting, transforming, etc. on data
+    - Performed merging, sub-setting, transforming, etc. on data
     - All processing steps should be recorded
 
 Data Preparation
 ========================================================
 
 * Estimated that 80% of data analysis is spent on cleaning and preparing data
-* Major limiting factor for using large sets of data
+* Major limiting factor for many "amateur" researchers
 
 <small>Dasu T, Johnson T (2003). Exploratory Data Mining and Data Cleaning. Wiley-IEEE.</small>
 
@@ -74,8 +73,11 @@ Raw Data Example
 library(BGTools)
 library(tibble)
 raw <- read_data("data", "meds_continuous")
-glimpse(raw)
 ```
+
+![raw data](figures/raw_data.png)
+
+* Contains `r nrow(raw)` rows of data
 
 Principles of Tidy Data
 ========================================================
@@ -108,7 +110,7 @@ Data Processing Tools
 Sharing Data
 ========================================================
 
-* For faster anlaysis turnaround, include the following
+* For faster analysis turnaround, include the following
     - Raw data
     - Tidy data
     - Code book describing each variable
@@ -161,7 +163,7 @@ Sharing Data Example
 
 ![messy shared data](figures/data_sharing_messy.png)
 
-Sharing Data Example
+Sharing Data Example Examined
 ========================================================
 
 ```{r echo=FALSE}
@@ -169,6 +171,17 @@ library(readxl)
 library(dplyr)
 share <- read_excel("data_sharing_example.xlsx") %>%
     mutate_each(funs(factor), -(`Number of packs/day`:`Pak year`))
-summary(share)
 ```
 
+* Diagnosis
+    - Number of distinct values: `r length(levels(share$Diagnosis))`
+* Alcohol Use
+
+```{r echo=FALSE}
+summary(share$`Alcohol use`)
+```
+
+* Number of packs/day
+    - Contains numeric and non-numeric data
+* Column P heading: "If yes"
+    - Unclear what this data represents

@@ -48,20 +48,19 @@ Sources of Data
 Categories of Data
 ========================================================
 
-* Data comes in all shapes and sizes, but rarely does it come in a format ready for analysis
 * Raw data
     - Original source of data
     - Hard to use for analysis
 * Processed data
     - Ready for analysis
-    - Performed merging, subsetting, transforming, etc. on data
+    - Performed merging, sub-setting, transforming, etc. on data
     - All processing steps should be recorded
 
 Data Preparation
 ========================================================
 
 * Estimated that 80% of data analysis is spent on cleaning and preparing data
-* Major limiting factor for using large sets of data
+* Major limiting factor for many "amateur" researchers
 
 <small>Dasu T, Johnson T (2003). Exploratory Data Mining and Data Cleaning. Wiley-IEEE.</small>
 
@@ -71,16 +70,10 @@ Raw Data Example
 * MUE medication administration data
 
 
-```
-Observations: 1,440,702
-Variables: 6
-$ PowerInsight Encounter Id    (int) 118754970, 118754970, 118754970, ...
-$ Clinical Event End Date/Time (chr) "2014/07/16 10:11:00", "2014/07/1...
-$ Clinical Event               (chr) "Administration Information", "HY...
-$ Infusion Rate                (dbl) 0, 0, 0, 0, 0, 0, 0, 125, 125, 0,...
-$ Infusion Rate Unit           (chr) "ml/hr", "", "", "", "", "", "", ...
-$ Event ID                     (dbl) 12714562560, 12714562562, 1271604...
-```
+
+![raw data](figures/raw_data.png)
+
+* Contains 1440702 rows of data
 
 Principles of Tidy Data
 ========================================================
@@ -113,7 +106,7 @@ Data Processing Tools
 Sharing Data
 ========================================================
 
-* For faster anlaysis turnaround, include the following
+* For faster analysis turnaround, include the following
     - Raw data
     - Tidy data
     - Code book describing each variable
@@ -166,42 +159,22 @@ Sharing Data Example
 
 ![messy shared data](figures/data_sharing_messy.png)
 
-Sharing Data Example
+Sharing Data Example Examined
 ========================================================
 
 
+
+* Diagnosis
+    - Number of distinct values: 172
+* Alcohol Use
+
+
 ```
-                     Diagnosis    Alcohol use  Illicit drug use
- COPD exacerbation        : 36   No     :133   No     :145     
- Acute respiratory failure: 25   no     :108   no     :115     
- Pneumonia                : 18   NK     : 91   NK     : 87     
- Respiratory failure      : 15   Yes    : 54   nk     : 36     
- Sepsis                   : 15   nk     : 32   Yes    : 31     
- Angioedema               : 13   (Other): 29   (Other): 32     
- (Other)                  :333   NA's   :  8   NA's   :  9     
-    smoking   Number of packs/day number of years      Pak year        
- Current:93   Length:455          Length:455         Length:455        
- NK     :85   Class :character    Class :character   Class :character  
- None   :85   Mode  :character    Mode  :character   Mode  :character  
- none   :68                                                            
- nk     :38                                                            
- (Other):77                                                            
- NA's   : 9                                                            
-      ARF      Severe organ insufficiency or immunocompromised 
- No     :172   No     :153                                     
- Yes    :124   Yes    :137                                     
- no     : 93   no     : 91                                     
- yes    : 47   yes    : 53                                     
- NO     :  9   NO     :  5                                     
- (Other):  7   (Other):  7                                     
- NA's   :  3   NA's   :  9                                     
-     If yes   
- No     :159  
- medical: 96  
- Medical: 80  
- no     : 80  
- NO     : 16  
- (Other): 16  
- NA's   :  8  
+   0   NA   nk   Nk   NK   no   nO   No   NO Past  yes  Yes NA's 
+   2    1   32    4   91  108    1  133    3    1   17   54    8 
 ```
 
+* Number of packs/day
+    - Contains numeric and non-numeric data
+* Column P heading: "If yes"
+    - Unclear what this data represents
