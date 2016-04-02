@@ -2,7 +2,6 @@ Working with Data
 ========================================================
 author: Brian Gulbis
 date: April 4, 2016
-autosize: true
 
 Big Data
 ========================================================
@@ -29,7 +28,7 @@ Data in Research
 ========================================================
 
 * Data is the second most important thing when doing research
-* The question is the most important
+* The question being asked is the most important
     - Data may limit or enable certain questions
     - Having data does not matter if you are not asking the right question
 * Big or small, you need the right data
@@ -71,9 +70,21 @@ Raw Data Example
 
 
 
+
 ![raw data](figures/raw_data.png)
 
-* Contains 1440702 rows of data
+* Contains 1,440,702 rows of data
+* Takes up 81 MB of space
+
+Tidy Data Example
+========================================================
+
+
+
+![tidy data](figures/tidy_data.png)
+
+* Contains only the 180,987 rows of data that we want
+* Column names more descriptive
 
 Principles of Tidy Data
 ========================================================
@@ -82,13 +93,20 @@ Principles of Tidy Data
     - Data within the column should be of the same type
 * Each observation of that variable should be in a different row
 * Variables of different “kinds” should be in different tables
-    - Each table should be stored in it’s own **file**
+    - Each table should be stored in it’s **own file**
     - Multiple tables should have a column which allows them to be linked
+
+<small>Wickham, H. Tidy data. J Stat Software 2014; 59 (10)</small>
+
+Principles of Tidy Data
+========================================================
+
 * Variable names should be stored in the first row
-    - Names should be readable
+    - Names should be descriptive and readable
     - Use minimal abbreviations
-        + Good: clinical_event, clinicalEvent
-        + Bad: clnevnt, ce, 
+    - Avoid having spaces in name
+        + Good: med_event, sedativeRate
+        + Bad: clnevnt, ce, clinical event
 
 <small>Wickham, H. Tidy data. J Stat Software 2014; 59 (10)</small>
 
@@ -134,7 +152,7 @@ Data Types
     - Should be coded as NA
 * Censored
     - Know something about the missing data
-    - Example: lab value outside detectable range
+        + Lab value outside detectable range
     - Still coded as NA, but add a new column which indicates the data is censored
 
 <small>https://github.com/jtleek/datasharing</small>
@@ -144,13 +162,13 @@ File Formats for Sharing Data
 
 * Excel
     - Usually works but not ideal
-    - All data should be on a single worksheet
+    - All data should be in a single worksheet
     - No columns or cells should be highlighted
     - No macros should be used
 * Text Files
     - Examples: CSV, TAB-delimited
     - Highest degree of compatibility
-    - Only information in "cells" is retained
+    - Only the information in "cells" is retained
 
 <small>https://github.com/jtleek/datasharing</small>
 
