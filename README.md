@@ -1,6 +1,6 @@
 # Dexmedetomidine utilization evaluation in intensive care units across the Memorial Hermann Health System
 Yeunju (Michelle) Lee, Pharm.D., BCPS, Michael Ha, Pharm.D., BCPS, Elizabeth Franco, Pharm.D., Monica Lee, Pharm.D., Vijay Nayar, Pharm.D., Leigh Gomez, Pharm.D., Stephanie Kuhl, Pharm.D., Minoosh Sobhanian, Pharm.D., Brian Gulbis, Pharm.D., BCPS, Teresa Allison, Pharm.D., BCPS  
-`r format(Sys.Date(), "%B %d, %Y")`  
+April 25, 2016  
 
 
 
