@@ -126,7 +126,7 @@ Raw Data Example
 ![raw data](figures/raw_data.png)
 
 * Contains 1,440,702 rows of data
-* Multiple observations for each patient
+* Multiple observations for each patient and medication
 
 Tidy Data Example
 ========================================================

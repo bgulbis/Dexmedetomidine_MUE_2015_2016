@@ -155,7 +155,7 @@ num_raw <- readRDS("num_rows.Rds")
 ![raw data](figures/raw_data.png)
 
 * Contains `r prettyNum(num_raw, big.mark = ",")` rows of data
-* Multiple observations for each patient
+* Multiple observations for each patient and medication
 
 Tidy Data Example
 ========================================================
