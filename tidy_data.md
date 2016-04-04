@@ -225,7 +225,7 @@ Data Manipulation
 * Transform
     - Add or modify variables
         + Convert all weights to same units
-        + Calculating CrCl
+        + Calculating CrCl and storing in new column
 
 <small>Wickham, H. Tidy data. J Stat Software 2014; 59 (10)</small>
 
@@ -378,6 +378,7 @@ File Formats for Sharing Data
     - Usually works, but not ideal
         + May be compatibility issues with the analysis tool
         + Calculated cells may not be read correctly
+        + Limits on number of rows that can be stored
     - All data should be in a single worksheet
     - No columns or cells should be highlighted
     - No macros should be used
