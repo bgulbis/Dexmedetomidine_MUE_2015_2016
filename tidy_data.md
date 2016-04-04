@@ -394,15 +394,17 @@ File Formats for Sharing Data
 
 <small>https://github.com/jtleek/datasharing</small>
 
-Data Collection and Storage
+Advice for Data Collection and Storage
 ========================================================
 
-* Separate data collection form and data storage tool
+* Create separate tool for each step
+    - Data collection, data storage, and data analysis
 * Design with the next step in mind
-    - Design data collection form to facilitate getting data into storage
-    - Design data storage to facilitate getting into analysis tool
-* Do not include data aggregation in data storage
-    - Calculated columns may not import correctly into analysis tools
+    - Collection form should facilitate getting data into storage
+    - Storage should facilitate getting into analysis tool
+* Improves efficiency and prevents errors
+    - Calculated columns not importing correctly for analysis
+    - Prevents accidentally overwriting data
     
 Using Microsoft Excel
 ========================================================
@@ -410,8 +412,15 @@ Using Microsoft Excel
 * Excel should be used primarily for data storage
     - Requires a lot of scrolling to visualize all data points
     - Columns generally not ordered to facilitate data entry
-    - Violates the rule to keep different kinds of data in separate files
+    - Does not keep different kinds of data in separate files
 * Consider using Excel's built-in form feature for data entry
     - Can create more advanced forms using Visual Basic
     - Google Docs allows for easy, robust form creation
 * Can be used for limited data analysis
+    - Create a new file which imports data from storage
+    - Can import from multiple files
+
+Applying What We've Learned
+========================================================
+
+* MUE Data Collection Form
