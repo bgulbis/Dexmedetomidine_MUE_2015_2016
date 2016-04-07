@@ -32,7 +32,8 @@ tmp.meds.cont.run <- calc_runtime(tmp.meds.cont)
 # summarize drip information
 data.meds.cont <- summarize_cont_meds(tmp.meds.cont.run) %>%
     filter(cum.dose > 0,
-           duration > 0)
+           duration > 0) %>%
+    ungroup
 
 data.meds.cont.sum <- data.meds.cont %>%
     group_by(pie.id, med) %>%
@@ -44,20 +45,39 @@ data.meds.cont.sum <- data.meds.cont %>%
 
 data.demographics <- semi_join(data.demographics, data.meds.cont.sum, by = "pie.id")
 
-# lookup_location <- function(pt, start) {
-#     x <- filter(data.locations, pie.id = pt,
-#                 start >= arrive.datetime,
-#                 start <= depart.datetime) 
-#     x$location
-# }
-# 
-# # identify which units patients were in while on dexmedetomidine
-# tmp.dexmed.units <- select(data.meds.cont, pie.id:stop.datetime) %>%
-#     filter(med == "dexmedetomidine") %>%
-#     rowwise %>%
-#     mutate(location = lookup_location(pie.id, start.datetime))
-    
+lookup_location <- function(pt, start) {
+    x <- filter(data.locations, pie.id == pt,
+                start >= arrive.datetime,
+                start <= depart.datetime)
+    # x <- filter(data.locations, pie.id == pt,
+    #             arrive.datetime <= start) %>%
+    #     arrange(arrive.datetime) %>%
+    #     group_by(pie.id) %>%
+    #     summarize(location = last(location))
 
+    if (length(x$location) < 1) {
+        "Unable to match location"
+    } else {
+        x$location
+    }
+}
+
+# identify which units patients were in while on dexmedetomidine
+tmp.dexmed <- select(data.meds.cont, pie.id:stop.datetime) %>%
+    filter(med == "dexmedetomidine") 
+
+data.demographics <- semi_join(data.demographics, tmp.dexmed, by = "pie.id")
+
+data.meds.cont <- semi_join(data.meds.cont, data.demographics, by = "pie.id")
+
+data.locations <- semi_join(data.locations, data.demographics, by = "pie.id")
+
+tmp.dexmed <- tmp.dexmed %>%
+    rowwise %>%
+    mutate(location = lookup_location(pie.id, start.datetime)) %>%
+    ungroup
+    
+# tmp <- filter(tmp.dexmed, location == "Unable to match location")
 
 # get raw data for all eligible patients
 # raw.measures <- read_edw_data(data.dir, "ht_wt", "measures")
