@@ -30,7 +30,9 @@ tmp.meds.cont <- read_edw_data(data.dir, "meds_continuous") %>%
 tmp.meds.cont.run <- calc_runtime(tmp.meds.cont)
 
 # summarize drip information
-data.meds.cont <- summarize_cont_meds(tmp.meds.cont.run)
+data.meds.cont <- summarize_cont_meds(tmp.meds.cont.run) %>%
+    filter(cum.dose > 0,
+           duration > 0)
 
 data.meds.cont.sum <- data.meds.cont %>%
     group_by(pie.id, med) %>%
