@@ -5,7 +5,7 @@
 source("0-library.R")
 
 # get list of patients from charge data
-charges.dexmed <- read_edw_data(proposal.dir, "patients", "charges") %>%
+charges.dexmed <- read_edw_data(dir.proposal, "patients", "charges") %>%
     distinct(pie.id)
 
 # make list of encounters for EDW

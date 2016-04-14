@@ -2,8 +2,10 @@
 
 source("0-library.R")
 
+tmp <- get_rds(dir.save)
+
 # remove any patients that were not admitted / discharged during FY15
-data.facility <- read_edw_data(data.dir, "facility") %>%
+data.facility <- read_edw_data(dir.data, "facility") %>%
     semi_join(data.demographics, by = "pie.id") %>%
     filter(admit.datetime >= mdy("07-01-2014"),
            discharge.datetime <= mdy("06-30-2015"))
@@ -11,7 +13,7 @@ data.facility <- read_edw_data(data.dir, "facility") %>%
 data.demographics <- semi_join(data.demographics, data.facility, by = "pie.id")
 
 # find ICU stays
-data.locations <- read_edw_data(data.dir, "locations") %>%
+data.locations <- read_edw_data(dir.data, "locations") %>%
     semi_join(data.demographics, by = "pie.id") %>%
     tidy_data("locations")
 
@@ -20,9 +22,9 @@ cont.meds <- c("dexmedetomidine", "lorazepam", "midazolam", "propofol",
                "ketamine", "fentanyl", "hydromorphone", "morphine")
 ref.cont.meds <- data_frame(name = cont.meds, type = "med", group = "cont")
 
-raw.meds.sched <- read_edw_data(data.dir, "meds_sched")
+raw.meds.sched <- read_edw_data(dir.data, "meds_sched")
 
-tmp.meds.cont <- read_edw_data(data.dir, "meds_continuous") %>%
+tmp.meds.cont <- read_edw_data(dir.data, "meds_continuous") %>%
     tidy_data("meds_cont", ref.data = ref.cont.meds, sched.data = raw.meds.sched) 
 
 # get dexmed infusion information, separate into distinct infusions if off for >
@@ -80,9 +82,9 @@ tmp.dexmed <- tmp.dexmed %>%
 # tmp <- filter(tmp.dexmed, location == "Unable to match location")
 
 # get raw data for all eligible patients
-# raw.measures <- read_edw_data(data.dir, "ht_wt", "measures")
-# raw.labs <- read_edw_data(data.dir, "labs")
-# raw.icu.assess <- read_edw_data(data.dir, "icu_assess")
-# raw.vent <- read_edw_data(data.dir, "vent")
-# raw.vitals <- read_edw_data(data.dir, "vitals")
-# raw.uop <- read_edw_data(data.dir, "uop")
+# raw.measures <- read_edw_data(dir.data, "ht_wt", "measures")
+# raw.labs <- read_edw_data(dir.data, "labs")
+# raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
+# raw.vent <- read_edw_data(dir.data, "vent")
+# raw.vitals <- read_edw_data(dir.data, "vitals")
+# raw.uop <- read_edw_data(dir.data, "uop")

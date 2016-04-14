@@ -8,7 +8,7 @@ excl.hosp <- c("Memorial Hermann Center for Advanced Heart Failure",
                "Memorial Hermann Clinics", "Memorial Hermann Radiology")
 
 # get data for potential patients; exclude outpatients and pediatric patients
-data.demographics <- read_edw_data(screen.dir, "demographics") %>%
+data.demographics <- read_edw_data(dir.screen, "demographics") %>%
     filter(age >= 18,
            !(facility %in% excl.hosp),
            visit.type == "Inpatient") %>%
@@ -17,3 +17,5 @@ data.demographics <- read_edw_data(screen.dir, "demographics") %>%
 
 edw.pie <- concat_encounters(data.demographics$pie.id, 750)
 print(edw.pie)
+
+save_rds(dir.save, "data")
