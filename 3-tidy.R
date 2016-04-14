@@ -60,10 +60,6 @@ data.demographics <- semi_join(data.demographics, data.meds.cont.sum, by = "pie.
 
 data.demographics <- semi_join(data.demographics, tmp.dexmed, by = "pie.id")
 
-data.meds.cont <- semi_join(data.meds.cont, data.demographics, by = "pie.id")
-
-data.locations <- semi_join(data.locations, data.demographics, by = "pie.id")
-
 data.dexmed <- tmp.dexmed %>%
     semi_join(data.demographics, by = "pie.id") %>%
     rowwise %>%
@@ -102,5 +98,12 @@ data.demographics <- left_join(data.demographics, tmp.weight, by = "pie.id")
 # raw.vent <- read_edw_data(dir.data, "vent")
 # raw.vitals <- read_edw_data(dir.data, "vitals")
 # raw.uop <- read_edw_data(dir.data, "uop")
+
+# remove all excluded patients
+data.dexmed <- semi_join(data.dexmed, data.demographics, by = "pie.id")
+data.facility <- semi_join(data.facility, data.demographics, by = "pie.id")
+data.meds.cont <- semi_join(data.meds.cont, data.demographics, by = "pie.id")
+data.meds.cont <- semi_join(data.meds.cont.sum, data.demographics, by = "pie.id")
+data.locations <- semi_join(data.locations, data.demographics, by = "pie.id")
 
 save_rds(dir.save, "^data")
