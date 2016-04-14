@@ -18,4 +18,4 @@ data.demographics <- read_edw_data(dir.screen, "demographics") %>%
 edw.pie <- concat_encounters(data.demographics$pie.id, 750)
 print(edw.pie)
 
-save_rds(dir.save, "data")
+save_rds(dir.save, "^data")

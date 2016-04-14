@@ -47,39 +47,21 @@ data.meds.cont.sum <- data.meds.cont %>%
 
 data.demographics <- semi_join(data.demographics, data.meds.cont.sum, by = "pie.id")
 
-lookup_location <- function(pt, start) {
-    x <- filter(data.locations, pie.id == pt,
-                start >= arrive.datetime,
-                start <= depart.datetime)
-    # x <- filter(data.locations, pie.id == pt,
-    #             arrive.datetime <= start) %>%
-    #     arrange(arrive.datetime) %>%
-    #     group_by(pie.id) %>%
-    #     summarize(location = last(location))
-
-    if (length(x$location) < 1) {
-        "Unable to match location"
-    } else {
-        x$location
-    }
-}
-
-# identify which units patients were in while on dexmedetomidine
-tmp.dexmed <- select(data.meds.cont, pie.id:stop.datetime) %>%
-    filter(med == "dexmedetomidine") 
-
 data.demographics <- semi_join(data.demographics, tmp.dexmed, by = "pie.id")
 
 data.meds.cont <- semi_join(data.meds.cont, data.demographics, by = "pie.id")
 
 data.locations <- semi_join(data.locations, data.demographics, by = "pie.id")
 
-tmp.dexmed <- tmp.dexmed %>%
+# identify which units patients were in while on dexmedetomidine
+tmp.dexmed <- select(data.meds.cont, pie.id:stop.datetime) %>%
+    filter(med == "dexmedetomidine") 
+
+data.locations.dexmed <- tmp.dexmed %>%
     rowwise %>%
     mutate(location = lookup_location(pie.id, start.datetime)) %>%
     ungroup
     
-# tmp <- filter(tmp.dexmed, location == "Unable to match location")
 
 # get raw data for all eligible patients
 # raw.measures <- read_edw_data(dir.data, "ht_wt", "measures")
