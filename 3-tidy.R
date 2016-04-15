@@ -6,11 +6,11 @@ tmp <- get_rds(dir.save)
 
 # remove any patients that were not admitted / discharged during FY15
 data.facility <- read_edw_data(dir.data, "facility") %>%
-    semi_join(data.demographics, by = "pie.id") %>%
+    semi_join(tidy.demographics, by = "pie.id") %>%
     filter(admit.datetime >= mdy("07-01-2014"),
            discharge.datetime <= mdy("06-30-2015"))
 
-data.demographics <- semi_join(data.demographics, data.facility, by = "pie.id")
+data.demographics <- semi_join(tidy.demographics, data.facility, by = "pie.id")
 
 # find ICU stays
 data.locations <- read_edw_data(dir.data, "locations") %>%
@@ -70,6 +70,23 @@ data.dexmed <- tmp.dexmed %>%
 data.dexmed.first <- group_by(data.dexmed, pie.id) %>%
     filter(drip.count == min(drip.count))
 
+# check for simultaneous infusion of other sedative agents
+tmp <- select(data.dexmed, -med, -drip.count, -location)
+data.sedatives <- filter(tmp.meds.cont.run, med != "dexmedetomidine") %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    inner_join(tmp, by = "pie.id") %>%
+    filter(rate.start < stop.datetime,
+           rate.stop > start.datetime) %>%
+    ungroup %>%
+    select(pie.id, med) %>%
+    mutate(med = factor(med, levels = cont.meds),
+           value = TRUE) %>%
+    distinct %>%
+    spread(med, value, fill = FALSE, drop = FALSE) %>%
+    select(-dexmedetomidine) %>%
+    full_join(data.demographics["pie.id"], by = "pie.id") %>%
+    mutate_each(funs(ifelse(is.na(.), FALSE, .)), -pie.id)
+
 # get raw data for all eligible patients
 raw.measures <- read_edw_data(dir.data, "measures")
 
@@ -93,10 +110,10 @@ tmp.weight <- filter(raw.measures, measure == "Weight",
 
 data.demographics <- left_join(data.demographics, tmp.weight, by = "pie.id")
 
+raw.vitals <- read_edw_data(dir.data, "vitals")
+
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
-# raw.vent <- read_edw_data(dir.data, "vent")
-# raw.vitals <- read_edw_data(dir.data, "vitals")
 # raw.uop <- read_edw_data(dir.data, "uop")
 
 # remove all excluded patients
@@ -104,7 +121,7 @@ data.dexmed <- semi_join(data.dexmed, data.demographics, by = "pie.id")
 data.dexmed.first <- semi_join(data.dexmed.first, data.demographics, by = "pie.id")
 data.facility <- semi_join(data.facility, data.demographics, by = "pie.id")
 data.meds.cont <- semi_join(data.meds.cont, data.demographics, by = "pie.id")
-data.meds.cont <- semi_join(data.meds.cont.sum, data.demographics, by = "pie.id")
+data.meds.cont.sum <- semi_join(data.meds.cont.sum, data.demographics, by = "pie.id")
 data.locations <- semi_join(data.locations, data.demographics, by = "pie.id")
 
 save_rds(dir.save, "^data")
