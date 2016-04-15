@@ -67,7 +67,7 @@ data.dexmed <- tmp.dexmed %>%
     ungroup
 
 # get data for first dexmed course
-tmp.dexmed.first <- group_by(data.dexmed, pie.id) %>%
+data.dexmed.first <- group_by(data.dexmed, pie.id) %>%
     filter(drip.count == min(drip.count))
 
 # get raw data for all eligible patients
@@ -86,7 +86,7 @@ data.demographics <- inner_join(data.demographics, tmp.height, by = "pie.id")
 tmp.weight <- filter(raw.measures, measure == "Weight",
                      measure.units == "kg") %>%
     semi_join(data.demographics, by = "pie.id") %>%
-    inner_join(tmp.dexmed.first, by = "pie.id") %>%
+    inner_join(data.dexmed.first, by = "pie.id") %>%
     filter(measure.datetime <= start.datetime + hours(8)) %>%
     group_by(pie.id) %>%
     summarize(weight = last(measure.result))
@@ -101,6 +101,7 @@ data.demographics <- left_join(data.demographics, tmp.weight, by = "pie.id")
 
 # remove all excluded patients
 data.dexmed <- semi_join(data.dexmed, data.demographics, by = "pie.id")
+data.dexmed.first <- semi_join(data.dexmed.first, data.demographics, by = "pie.id")
 data.facility <- semi_join(data.facility, data.demographics, by = "pie.id")
 data.meds.cont <- semi_join(data.meds.cont, data.demographics, by = "pie.id")
 data.meds.cont <- semi_join(data.meds.cont.sum, data.demographics, by = "pie.id")
