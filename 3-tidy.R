@@ -95,7 +95,8 @@ data.demographics <- left_join(data.demographics, tmp.weight, by = "pie.id")
 
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
-# raw.vent <- read_edw_data(dir.data, "vent")
+raw.vent.settings <- read_edw_data(dir.data, "vent_settings")
+raw.vent.start <- read_edw_data(dir.data, "vent_start")
 # raw.vitals <- read_edw_data(dir.data, "vitals")
 # raw.uop <- read_edw_data(dir.data, "uop")
 
