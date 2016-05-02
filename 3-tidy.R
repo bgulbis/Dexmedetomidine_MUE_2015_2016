@@ -5,12 +5,12 @@ source("0-library.R")
 tmp <- get_rds(dir.save)
 
 # remove any patients that were not admitted / discharged during FY15
-data.facility <- read_edw_data(dir.data, "facility", "visits") %>%
+data.visits <- read_edw_data(dir.data, "facility", "visits") %>%
     semi_join(tidy.demographics, by = "pie.id") %>%
     filter(admit.datetime >= mdy_hm("07-01-2014 00:00"),
            discharge.datetime <= mdy_hms("06-30-2015 23:59:59"))
 
-data.demographics <- semi_join(tidy.demographics, data.facility, by = "pie.id")
+data.demographics <- semi_join(tidy.demographics, data.visits, by = "pie.id")
 
 # find ICU stays
 data.locations <- read_edw_data(dir.data, "locations") %>%
@@ -110,18 +110,23 @@ tmp.weight <- filter(raw.measures, measure == "Weight",
 
 data.demographics <- left_join(data.demographics, tmp.weight, by = "pie.id")
 
+tmp.vent.times <- read_edw_data(dir.data, "vent_start") %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    tidy_data("vent_times", visit.times = data.visits)
+
+data.demographics <- data.demographics %>%
+    mutate(vent = ifelse(pie.id %in% tmp.vent.times$pie.id, TRUE, FALSE))
 
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
 raw.vent.settings <- read_edw_data(dir.data, "vent_settings")
-raw.vent.start <- read_edw_data(dir.data, "vent_start")
 raw.vitals <- read_edw_data(dir.data, "vitals")
 # raw.uop <- read_edw_data(dir.data, "uop")
 
 # remove all excluded patients
 data.dexmed <- semi_join(data.dexmed, data.demographics, by = "pie.id")
 data.dexmed.first <- semi_join(data.dexmed.first, data.demographics, by = "pie.id")
-data.facility <- semi_join(data.facility, data.demographics, by = "pie.id")
+data.visits <- semi_join(data.visits, data.demographics, by = "pie.id")
 data.meds.cont <- semi_join(data.meds.cont, data.demographics, by = "pie.id")
 data.meds.cont.sum <- semi_join(data.meds.cont.sum, data.demographics, by = "pie.id")
 data.locations <- semi_join(data.locations, data.demographics, by = "pie.id")
