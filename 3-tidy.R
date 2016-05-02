@@ -110,12 +110,15 @@ tmp.weight <- filter(raw.measures, measure == "Weight",
 
 data.demographics <- left_join(data.demographics, tmp.weight, by = "pie.id")
 
+# vent data ----
 tmp.vent.times <- read_edw_data(dir.data, "vent_start") %>%
     semi_join(data.demographics, by = "pie.id") %>%
     tidy_data("vent_times", visit.times = data.visits)
 
 data.demographics <- data.demographics %>%
     mutate(vent = ifelse(pie.id %in% tmp.vent.times$pie.id, TRUE, FALSE))
+
+
 
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
