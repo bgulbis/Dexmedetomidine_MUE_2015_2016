@@ -5,10 +5,10 @@ source("0-library.R")
 tmp <- get_rds(dir.save)
 
 # remove any patients that were not admitted / discharged during FY15
-data.facility <- read_edw_data(dir.data, "facility") %>%
+data.facility <- read_edw_data(dir.data, "facility", "visits") %>%
     semi_join(tidy.demographics, by = "pie.id") %>%
-    filter(admit.datetime >= mdy("07-01-2014"),
-           discharge.datetime <= mdy("06-30-2015"))
+    filter(admit.datetime >= mdy_hm("07-01-2014 00:00"),
+           discharge.datetime <= mdy_hms("06-30-2015 23:59:59"))
 
 data.demographics <- semi_join(tidy.demographics, data.facility, by = "pie.id")
 
