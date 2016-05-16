@@ -150,14 +150,17 @@ data.vent <- full_join(data.vent, data.demographics["pie.id"], by = "pie.id") %>
 # safety outcomes --------------------------------------
 
 raw.vitals <- read_edw_data(dir.data, "vitals") %>%
+    semi_join(data.demographics, by = "pie.id") %>%
     mutate(vital.result = as.numeric(vital.result))
 
-tmp.hr <- filter(raw.vitals, str_detect(vital, "(heart|pulse) rate")) %>%
-    semi_join(data.demographics, by = "pie.id") %>%
-    left_join(data.dexmed[c("pie.id", "start.datetime", "stop.datetime", "drip.count")], by = "pie.id") 
+# tmp <- select(raw.vitals, vital) %>% distinct
+tmp.med <- select(data.dexmed, pie.id, start.datetime, stop.datetime, drip.count)
 
-# calculate mean HR during 48 hours prior to starting dexmed to evaluate for new
-# bradycardia
+tmp.hr <- filter(raw.vitals, str_detect(vital, "(heart|pulse) rate")) %>%
+    left_join(tmp.med, by = "pie.id") 
+
+# calculate mean/min/max HR during 48 hours prior to starting dexmed to evaluate
+# for new bradycardia
 tmp.hr.prior <- tmp.hr %>%
     filter(vital.datetime > start.datetime - days(2),
            vital.datetime < start.datetime) %>%
@@ -174,13 +177,44 @@ tmp.hr.during <- tmp.hr %>%
               hr.during.min = min(vital.result),
               hr.during.max = max(vital.result))
 
-tmp.hr.dexmed <- full_join(tmp.hr.prior, tmp.hr.during, by = c("pie.id", "drip.count")) %>%
-    mutate(low.hr = (hr.prior.min > 55 & hr.during.min <= 55),
-           bradycard = (hr.prior.mean > 55 & hr.during.mean <= 55))
-
-tmp.map <- filter(raw.vitals, str_detect(vital, "mean arterial")) %>%
+# check for atropine use
+tmp.atropine <- raw.meds.sched %>%
     semi_join(data.demographics, by = "pie.id") %>%
-    left_join(data.dexmed[c("pie.id", "start.datetime", "stop.datetime")], by = "pie.id")    
+    filter(str_detect(med, "^atropine$")) %>%
+    left_join(tmp.med, by = "pie.id") %>%
+    mutate(atrop.dexmed = med.datetime > start.datetime & med.datetime < stop.datetime + hours(12))
+
+tmp.hr.dexmed <- full_join(tmp.hr.prior, tmp.hr.during, by = c("pie.id", "drip.count")) %>%
+    full_join(tmp.atropine[c("pie.id", "drip.count", "atrop.dexmed")], by = c("pie.id", "drip.count")) %>%
+    mutate(low.hr = hr.prior.min > 55 & hr.during.min <= 55,
+           bradycard = low.hr == TRUE | atrop.dexmed == TRUE)
+
+tmp.hr.dexmed$atrop.dexmed[is.na(tmp.hr.dexmed$atrop.dexmed)] <- FALSE
+tmp.hr.dexmed$bradycard[is.na(tmp.hr.dexmed$bradycard)] <- FALSE
+
+# hypotension
+tmp.bp <- filter(raw.vitals, str_detect(vital, "(mean arterial|systolic)")) %>%
+    left_join(tmp.med, by = "pie.id") %>%
+    mutate(vital = str_replace_all(vital, "(mean arterial pressure)", "map"),
+           vital = str_replace_all(vital, " \\(invasive\\)", ""),
+           vital = str_replace_all(vital, "(.*systolic.*)", "sbp"))
+
+tmp.bp.prior <- tmp.bp %>%
+    filter(vital.datetime > start.datetime - days(2),
+           vital.datetime < start.datetime) %>%
+    group_by(pie.id, vital, drip.count) %>%
+    summarize(bp.prior.mean = mean(vital.result),
+              bp.prior.min = min(vital.result),
+              bp.prior.max = max(vital.result))
+
+tmp.bp.during <- tmp.bp %>%
+    filter(vital.datetime >= start.datetime,
+           vital.datetime <= stop.datetime) %>%
+    group_by(pie.id, vital, drip.count) %>%
+    summarize(bp.during.mean = mean(vital.result),
+              bp.during.min = min(vital.result),
+              bp.during.max = max(vital.result))
+
 
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
