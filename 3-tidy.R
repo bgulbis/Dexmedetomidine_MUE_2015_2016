@@ -24,6 +24,7 @@ tmp.pedi <- data.locations %>%
 
 data.demographics <- anti_join(data.demographics, tmp.pedi, by = "pie.id")
 
+# dexmedetomidine --------------------------------------
 # get dexmedetomidine data 
 cont.meds <- c("dexmedetomidine", "lorazepam", "midazolam", "propofol", 
                "ketamine", "fentanyl", "hydromorphone", "morphine")
@@ -70,6 +71,7 @@ data.dexmed <- tmp.dexmed %>%
 data.dexmed.first <- group_by(data.dexmed, pie.id) %>%
     filter(drip.count == min(drip.count))
 
+# sedatives --------------------------------------------
 # check for simultaneous infusion of other sedative agents
 tmp <- select(data.dexmed, -med, -drip.count, -location)
 data.sedatives <- filter(tmp.meds.cont.run, med != "dexmedetomidine") %>%
@@ -87,16 +89,14 @@ data.sedatives <- filter(tmp.meds.cont.run, med != "dexmedetomidine") %>%
     full_join(data.demographics["pie.id"], by = "pie.id") %>%
     mutate_each(funs(ifelse(is.na(.), FALSE, .)), -pie.id)
 
-# get raw data for all eligible patients
+# measures ---------------------------------------------
 raw.measures <- read_edw_data(dir.data, "measures")
 
-tmp.height <- filter(raw.measures, measure == "Height",
+data.measures <- filter(raw.measures, measure == "Height",
                      measure.units == "cm") %>%
     semi_join(data.demographics, by = "pie.id") %>%
     group_by(pie.id) %>%
     summarize(height = first(measure.result))
-
-data.demographics <- inner_join(data.demographics, tmp.height, by = "pie.id")
 
 # a few patients didn't have a weight when dexmed was started, but had one
 # recorded within 8 hours
@@ -108,9 +108,9 @@ tmp.weight <- filter(raw.measures, measure == "Weight",
     group_by(pie.id) %>%
     summarize(weight = last(measure.result))
 
-data.demographics <- left_join(data.demographics, tmp.weight, by = "pie.id")
+data.measures <- full_join(data.measures, tmp.weight, by = "pie.id")
 
-# vent data ----
+# vent data --------------------------------------------
 tmp.vent.times <- read_edw_data(dir.data, "vent_start") %>%
     semi_join(data.demographics, by = "pie.id") %>%
     tidy_data("vent_times", visit.times = data.visits) %>%
@@ -119,7 +119,8 @@ tmp.vent.times <- read_edw_data(dir.data, "vent_start") %>%
 
 data.vent <- tmp.vent.times %>%
     group_by(pie.id) %>%
-    summarize(vent.duration = sum(as.numeric(vent.duration)))
+    summarize(vent.num = n(),
+              vent.duration = sum(as.numeric(vent.duration)))
 
 # function used to figure out dexmedetomidine and vent time overlap
 dexmedVent <- function(dexm, vent) {
