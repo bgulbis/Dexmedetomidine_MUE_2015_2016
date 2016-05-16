@@ -113,17 +113,38 @@ data.demographics <- left_join(data.demographics, tmp.weight, by = "pie.id")
 # vent data ----
 tmp.vent.times <- read_edw_data(dir.data, "vent_start") %>%
     semi_join(data.demographics, by = "pie.id") %>%
-    tidy_data("vent_times", visit.times = data.visits)
+    tidy_data("vent_times", visit.times = data.visits) %>%
+    rename(vent.start.datetime = start.datetime,
+           vent.stop.datetime = stop.datetime)
 
 data.demographics <- data.demographics %>%
     mutate(vent = ifelse(pie.id %in% tmp.vent.times$pie.id, TRUE, FALSE))
 
+dexmedVent <- function(dexm, vent) {
+    if (dexm < vent) {
+        vent
+    } else {
+        dexm
+    }
+}
 
+tmp.dexmed.vent <- full_join(data.dexmed, tmp.vent.times, by = "pie.id") %>%
+    filter(start.datetime < vent.stop.datetime,
+           stop.datetime > vent.start.datetime) %>%
+    rowwise %>%
+    mutate(dur.start = dexmedVent(start.datetime, vent.start.datetime),
+           dur.stop = dexmedVent(stop.datetime, vent.stop.datetime),
+           dexm.vent = difftime(dur.stop, dur.start, units = "hours")) %>%
+    group_by(pie.id) %>%
+    summarize(dexm.vent.duration = sum(as.numeric(dexm.vent)))
+
+data.demographics <- left_join(data.demographics, tmp.dexmed.vent, by = "pie.id") %>%
+    mutate(dexm.vent.duration = ifelse(vent == TRUE & is.na(dexm.vent.duration), 0, dexm.vent.duration))
 
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
-raw.vent.settings <- read_edw_data(dir.data, "vent_settings")
-raw.vitals <- read_edw_data(dir.data, "vitals")
+# raw.vent.settings <- read_edw_data(dir.data, "vent_settings")
+# raw.vitals <- read_edw_data(dir.data, "vitals")
 # raw.uop <- read_edw_data(dir.data, "uop")
 
 # remove all excluded patients
