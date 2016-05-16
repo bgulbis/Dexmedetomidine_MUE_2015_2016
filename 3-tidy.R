@@ -117,9 +117,11 @@ tmp.vent.times <- read_edw_data(dir.data, "vent_start") %>%
     rename(vent.start.datetime = start.datetime,
            vent.stop.datetime = stop.datetime)
 
-data.demographics <- data.demographics %>%
-    mutate(vent = ifelse(pie.id %in% tmp.vent.times$pie.id, TRUE, FALSE))
+data.vent <- tmp.vent.times %>%
+    group_by(pie.id) %>%
+    summarize(vent.duration = sum(as.numeric(vent.duration)))
 
+# function used to figure out dexmedetomidine and vent time overlap
 dexmedVent <- function(dexm, vent) {
     if (dexm < vent) {
         vent
@@ -136,10 +138,13 @@ tmp.dexmed.vent <- full_join(data.dexmed, tmp.vent.times, by = "pie.id") %>%
            dur.stop = dexmedVent(stop.datetime, vent.stop.datetime),
            dexm.vent = difftime(dur.stop, dur.start, units = "hours")) %>%
     group_by(pie.id) %>%
-    summarize(dexm.vent.duration = sum(as.numeric(dexm.vent)))
+    summarize(dexm.vent.duration = sum(as.numeric(dexm.vent))) 
 
-data.demographics <- left_join(data.demographics, tmp.dexmed.vent, by = "pie.id") %>%
-    mutate(dexm.vent.duration = ifelse(vent == TRUE & is.na(dexm.vent.duration), 0, dexm.vent.duration))
+data.vent <- left_join(data.vent, tmp.dexmed.vent, by = "pie.id") 
+data.vent$dexm.vent.duration[is.na(data.vent$dexm.vent.duration)] <- 0
+
+data.vent <- full_join(data.vent, data.demographics["pie.id"], by = "pie.id") %>%
+    mutate(vent = ifelse(is.na(vent.duration), FALSE, TRUE))
 
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
