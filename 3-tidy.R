@@ -147,10 +147,44 @@ data.vent$dexm.vent.duration[is.na(data.vent$dexm.vent.duration)] <- 0
 data.vent <- full_join(data.vent, data.demographics["pie.id"], by = "pie.id") %>%
     mutate(vent = ifelse(is.na(vent.duration), FALSE, TRUE))
 
+# safety outcomes --------------------------------------
+
+raw.vitals <- read_edw_data(dir.data, "vitals") %>%
+    mutate(vital.result = as.numeric(vital.result))
+
+tmp.hr <- filter(raw.vitals, str_detect(vital, "(heart|pulse) rate")) %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    left_join(data.dexmed[c("pie.id", "start.datetime", "stop.datetime", "drip.count")], by = "pie.id") 
+
+# calculate mean HR during 48 hours prior to starting dexmed to evaluate for new
+# bradycardia
+tmp.hr.prior <- tmp.hr %>%
+    filter(vital.datetime > start.datetime - days(2),
+           vital.datetime < start.datetime) %>%
+    group_by(pie.id, drip.count) %>%
+    summarize(hr.prior.mean = mean(vital.result),
+              hr.prior.min = min(vital.result),
+              hr.prior.max = max(vital.result))
+    
+tmp.hr.during <- tmp.hr %>%
+    filter(vital.datetime >= start.datetime,
+           vital.datetime <= stop.datetime) %>%
+    group_by(pie.id, drip.count) %>%
+    summarize(hr.during.mean = mean(vital.result),
+              hr.during.min = min(vital.result),
+              hr.during.max = max(vital.result))
+
+tmp.hr.dexmed <- full_join(tmp.hr.prior, tmp.hr.during, by = c("pie.id", "drip.count")) %>%
+    mutate(low.hr = (hr.prior.min > 55 & hr.during.min <= 55),
+           bradycard = (hr.prior.mean > 55 & hr.during.mean <= 55))
+
+tmp.map <- filter(raw.vitals, str_detect(vital, "mean arterial")) %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    left_join(data.dexmed[c("pie.id", "start.datetime", "stop.datetime")], by = "pie.id")    
+
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
 # raw.vent.settings <- read_edw_data(dir.data, "vent_settings")
-# raw.vitals <- read_edw_data(dir.data, "vitals")
 # raw.uop <- read_edw_data(dir.data, "uop")
 
 # remove all excluded patients
