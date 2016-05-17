@@ -160,15 +160,13 @@ tmp.hr <- filter(raw.vitals, str_detect(vital, "(heart|pulse) rate")) %>%
     left_join(tmp.med, by = "pie.id") %>%
     mutate(hr.low = vital.result <= 55) 
 
-# calculate mean/min/max HR during 48 hours prior to starting dexmed to evaluate
-# for new bradycardia
+# bradycardia is > 2 HR <= 55 while on dexmed, and they had < 2 HR <= 55 during
+# 24-hours prior to starting dexmed
 tmp.hr.prior <- tmp.hr %>%
     filter(vital.datetime > start.datetime - days(1),
            vital.datetime < start.datetime) %>%
     group_by(pie.id, drip.count) %>%
     summarize(hr.prior.mean = mean(vital.result),
-              hr.prior.min = min(vital.result),
-              hr.prior.max = max(vital.result),
               hr.prior.low = sum(hr.low))
     
 tmp.hr.during <- tmp.hr %>%
@@ -176,8 +174,6 @@ tmp.hr.during <- tmp.hr %>%
            vital.datetime <= stop.datetime) %>%
     group_by(pie.id, drip.count) %>%
     summarize(hr.during.mean = mean(vital.result),
-              hr.during.min = min(vital.result),
-              hr.during.max = max(vital.result),
               hr.during.low = sum(hr.low))
 
 # check for atropine use
@@ -191,18 +187,14 @@ tmp.atropine <- raw.meds.sched %>%
     mutate(atropine = atropine > 0)
     
 
-tmp.hr.dexmed <- full_join(tmp.hr.prior, tmp.hr.during, by = c("pie.id", "drip.count")) %>%
+data.safety.hr <- full_join(tmp.hr.prior, tmp.hr.during, by = c("pie.id", "drip.count")) %>%
     full_join(tmp.atropine, by = c("pie.id", "drip.count")) %>%
     mutate(low.hr = hr.prior.low < 2 & hr.during.low > 2,
-           bradycard = low.hr == TRUE | atropine == TRUE,
+           bradycardia = low.hr == TRUE | atropine == TRUE,
            hr.change.mean = hr.during.mean - hr.prior.mean)
 
-tmp.hr.dexmed$atropine[is.na(tmp.hr.dexmed$atropine)] <- FALSE
-tmp.hr.dexmed$bradycard[is.na(tmp.hr.dexmed$bradycard)] <- FALSE
-
-tmp <- group_by(tmp.hr.dexmed, pie.id, drip.count) %>%
-    summarize(num = n()) %>%
-    filter(num > 1)
+data.safety.hr$atropine[is.na(data.safety.hr$atropine)] <- FALSE
+data.safety.hr$bradycardia[is.na(data.safety.hr$bradycardia)] <- FALSE
 
 # hypotension
 tmp.bp <- filter(raw.vitals, str_detect(vital, "(mean arterial|systolic)")) %>%
