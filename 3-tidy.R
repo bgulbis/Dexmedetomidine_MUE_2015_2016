@@ -136,15 +136,20 @@ data.vent <- tmp.vent.times %>%
     summarize(vent.num = n(),
               vent.duration = sum(as.numeric(vent.duration)))
 
-tmp.dexmed.vent <- full_join(data.dexmed, tmp.vent.times, by = "pie.id") %>%
+tmp.dexmed.vent <- select(data.dexmed.start, pie.id, drip.count:stop.datetime) %>%
+    inner_join(tmp.vent.times, by = "pie.id") %>%
+    ungroup %>%
     mutate(overlap = int_overlaps(interval(start.datetime, stop.datetime),
-                                  interval(vent.start, vent.stop)))
+                                  interval(vent.start, vent.stop))) %>%
+    filter(overlap == TRUE) %>%
+    mutate(dexm.vent = as.period(intersect(interval(start.datetime, stop.datetime), 
+                                           interval(vent.start, vent.stop)), "hours"))
 
-    mutate(dur.start = dexmedVent(start.datetime, vent.start.datetime),
-           dur.stop = dexmedVent(stop.datetime, vent.stop.datetime),
-           dexm.vent = difftime(dur.stop, dur.start, units = "hours")) %>%
-    group_by(pie.id) %>%
-    summarize(dexm.vent.duration = sum(as.numeric(dexm.vent))) 
+    # mutate(dur.start = dexmedVent(start.datetime, vent.start.datetime),
+    #        dur.stop = dexmedVent(stop.datetime, vent.stop.datetime),
+    #        dexm.vent = difftime(dur.stop, dur.start, units = "hours")) %>%
+    # group_by(pie.id) %>%
+    # summarize(dexm.vent.duration = sum(as.numeric(dexm.vent))) 
 
 data.vent <- left_join(data.vent, tmp.dexmed.vent, by = "pie.id") 
 data.vent$dexm.vent.duration[is.na(data.vent$dexm.vent.duration)] <- 0
