@@ -15,7 +15,7 @@ data.demographics <- semi_join(tidy.demographics, data.visits, by = "pie.id")
 # find ICU stays
 data.locations <- read_edw_data(dir.data, "locations") %>%
     semi_join(data.demographics, by = "pie.id") %>%
-    tidy_data("locations")
+    tidy_data("locations") 
 
 # remove any patients who were in PICU
 tmp.pedi <- data.locations %>%
@@ -32,8 +32,10 @@ ref.cont.meds <- data_frame(name = cont.meds, type = "med", group = "cont")
 
 raw.meds.sched <- read_edw_data(dir.data, "meds_sched")
 
-tmp.meds.cont <- read_edw_data(dir.data, "meds_continuous", check.distinct = FALSE) %>%
-    tidy_data("meds_cont", ref.data = ref.cont.meds, sched.data = raw.meds.sched) 
+raw.meds.cont <- read_edw_data(dir.data, "meds_continuous", check.distinct = FALSE) 
+
+tmp.meds.cont <- tidy_data(raw.meds.cont, "meds_cont", ref.data = ref.cont.meds, 
+                           sched.data = raw.meds.sched) 
 
 # get dexmed infusion information, separate into distinct infusions if off for >
 # 12 hours
@@ -42,8 +44,7 @@ tmp.meds.cont.run <- calc_runtime(tmp.meds.cont)
 # summarize drip information
 data.meds.cont <- summarize_cont_meds(tmp.meds.cont.run) %>%
     filter(cum.dose > 0,
-           duration > 0) %>%
-    ungroup
+           duration > 0) 
 
 data.meds.cont.sum <- data.meds.cont %>%
     group_by(pie.id, med) %>%
@@ -61,11 +62,14 @@ data.demographics <- semi_join(data.demographics, data.meds.cont.sum, by = "pie.
 
 data.demographics <- semi_join(data.demographics, tmp.dexmed, by = "pie.id")
 
+data.locations <- semi_join(data.locations, data.demographics, by = "pie.id")
+
 data.dexmed <- tmp.dexmed %>%
     semi_join(data.demographics, by = "pie.id") %>%
-    rowwise %>%
-    mutate(location = lookup_location(pie.id, start.datetime)) %>%
-    ungroup
+    full_join(data.locations, by = "pie.id") %>%
+    mutate(overlap = int_overlaps(interval(start.datetime, stop.datetime),
+                                  interval(arrive.datetime, depart.datetime))) %>%
+    filter(overlap == TRUE)
 
 # get data for first dexmed course
 data.dexmed.first <- group_by(data.dexmed, pie.id) %>%
@@ -111,30 +115,22 @@ tmp.weight <- filter(raw.measures, measure == "Weight",
 data.measures <- full_join(data.measures, tmp.weight, by = "pie.id")
 
 # vent data --------------------------------------------
+
 tmp.vent.times <- read_edw_data(dir.data, "vent_start") %>%
     semi_join(data.demographics, by = "pie.id") %>%
     tidy_data("vent_times", visit.times = data.visits) %>%
-    rename(vent.start.datetime = start.datetime,
-           vent.stop.datetime = stop.datetime)
+    rename(vent.start = start.datetime,
+           vent.stop = stop.datetime)
 
 data.vent <- tmp.vent.times %>%
     group_by(pie.id) %>%
     summarize(vent.num = n(),
               vent.duration = sum(as.numeric(vent.duration)))
 
-# function used to figure out dexmedetomidine and vent time overlap
-dexmedVent <- function(dexm, vent) {
-    if (dexm < vent) {
-        vent
-    } else {
-        dexm
-    }
-}
-
 tmp.dexmed.vent <- full_join(data.dexmed, tmp.vent.times, by = "pie.id") %>%
-    filter(start.datetime < vent.stop.datetime,
-           stop.datetime > vent.start.datetime) %>%
-    rowwise %>%
+    mutate(overlap = int_overlaps(interval(start.datetime, stop.datetime),
+                                  interval(vent.start, vent.stop)))
+
     mutate(dur.start = dexmedVent(start.datetime, vent.start.datetime),
            dur.stop = dexmedVent(stop.datetime, vent.stop.datetime),
            dexm.vent = difftime(dur.stop, dur.start, units = "hours")) %>%
@@ -147,7 +143,7 @@ data.vent$dexm.vent.duration[is.na(data.vent$dexm.vent.duration)] <- 0
 data.vent <- full_join(data.vent, data.demographics["pie.id"], by = "pie.id") %>%
     mutate(vent = ifelse(is.na(vent.duration), FALSE, TRUE))
 
-# safety outcomes --------------------------------------
+# safety bradycardia -----------------------------------
 
 raw.vitals <- read_edw_data(dir.data, "vitals") %>%
     semi_join(data.demographics, by = "pie.id") %>%
@@ -158,10 +154,10 @@ tmp.med <- select(data.dexmed, pie.id, start.datetime, stop.datetime, drip.count
 
 tmp.hr <- filter(raw.vitals, str_detect(vital, "(heart|pulse) rate")) %>%
     left_join(tmp.med, by = "pie.id") %>%
-    mutate(hr.low = vital.result <= 55) 
+    mutate(hr.low = vital.result < 55) 
 
-# bradycardia is > 2 HR <= 55 while on dexmed, and they had < 2 HR <= 55 during
-# 24-hours prior to starting dexmed
+# bradycardia is > 2 HR's < 55 while on dexmed, and they had < 2 HR's < 55
+# during 24-hours prior to starting dexmed
 tmp.hr.prior <- tmp.hr %>%
     filter(vital.datetime > start.datetime - days(1),
            vital.datetime < start.datetime) %>%
@@ -182,12 +178,14 @@ tmp.atropine <- raw.meds.sched %>%
     filter(str_detect(med, "^atropine$")) %>%
     left_join(tmp.med, by = "pie.id") %>%
     group_by(pie.id, drip.count) %>%
-    mutate(atrop.dexmed = med.datetime > start.datetime & med.datetime < stop.datetime + hours(12)) %>%
+    mutate(atrop.dexmed = med.datetime > start.datetime & 
+               med.datetime < stop.datetime + hours(12)) %>%
     summarize(atropine = sum(atrop.dexmed)) %>%
     mutate(atropine = atropine > 0)
     
 
-data.safety.hr <- full_join(tmp.hr.prior, tmp.hr.during, by = c("pie.id", "drip.count")) %>%
+data.safety.hr <- full_join(tmp.hr.prior, tmp.hr.during, 
+                            by = c("pie.id", "drip.count")) %>%
     full_join(tmp.atropine, by = c("pie.id", "drip.count")) %>%
     mutate(low.hr = hr.prior.low < 2 & hr.during.low > 2,
            bradycardia = low.hr == TRUE | atropine == TRUE,
@@ -196,28 +194,42 @@ data.safety.hr <- full_join(tmp.hr.prior, tmp.hr.during, by = c("pie.id", "drip.
 data.safety.hr$atropine[is.na(data.safety.hr$atropine)] <- FALSE
 data.safety.hr$bradycardia[is.na(data.safety.hr$bradycardia)] <- FALSE
 
-# hypotension
+# safety hypotension -----------------------------------
 tmp.bp <- filter(raw.vitals, str_detect(vital, "(mean arterial|systolic)")) %>%
     left_join(tmp.med, by = "pie.id") %>%
     mutate(vital = str_replace_all(vital, "(mean arterial pressure)", "map"),
            vital = str_replace_all(vital, " \\(invasive\\)", ""),
-           vital = str_replace_all(vital, "(.*systolic.*)", "sbp"))
+           vital = str_replace_all(vital, "(.*systolic.*)", "sbp"),
+           low.bp = ifelse(vital == "map", vital.result < 60, vital.result < 80))
 
+# for hypotension, use > 2 low sbp/map's if < 2 low values during 24-hours prior
+# to starting dexmed
 tmp.bp.prior <- tmp.bp %>%
-    filter(vital.datetime > start.datetime - days(2),
+    filter(vital.datetime > start.datetime - days(1),
            vital.datetime < start.datetime) %>%
     group_by(pie.id, vital, drip.count) %>%
     summarize(bp.prior.mean = mean(vital.result),
-              bp.prior.min = min(vital.result),
-              bp.prior.max = max(vital.result))
+              bp.prior.low = sum(low.bp))
 
 tmp.bp.during <- tmp.bp %>%
     filter(vital.datetime >= start.datetime,
            vital.datetime <= stop.datetime) %>%
     group_by(pie.id, vital, drip.count) %>%
     summarize(bp.during.mean = mean(vital.result),
-              bp.during.min = min(vital.result),
-              bp.during.max = max(vital.result))
+              bp.during.low = sum(low.bp))
+
+# check for use of vasopressors
+vasopressors <- c("dopamine", "norepinephrine", "epinephrine", "phenylephrine", 
+                  "vasopressin")
+ref.vasop <- data_frame(name = vasopressors, type = "med", group = "cont")
+
+tmp.vasop <- raw.meds.cont %>%
+    tidy_data("meds_cont", ref.data = ref.vasop, sched.data = raw.meds.sched) %>%
+    calc_runtime %>%
+    summarize_cont_meds
+
+tmp <- tmp.vasop %>%
+    mutate(drip.interval = interval(start.datetime, stop.datetime))
 
 
 # raw.labs <- read_edw_data(dir.data, "labs")
