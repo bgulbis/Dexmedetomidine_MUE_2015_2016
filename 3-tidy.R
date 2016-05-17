@@ -71,18 +71,27 @@ data.dexmed <- tmp.dexmed %>%
                                   interval(arrive.datetime, depart.datetime))) %>%
     filter(overlap == TRUE)
 
+# find the unit where each dexmed course was started
+data.dexmed.start <- data.dexmed %>%
+    group_by(pie.id, drip.count) %>%
+    arrange(arrive.datetime) %>%
+    filter(arrive.datetime == first(arrive.datetime))
+
 # get data for first dexmed course
-data.dexmed.first <- group_by(data.dexmed, pie.id) %>%
+data.dexmed.first <- group_by(data.dexmed.start, pie.id) %>%
     filter(drip.count == min(drip.count))
 
 # sedatives --------------------------------------------
 # check for simultaneous infusion of other sedative agents
-tmp <- select(data.dexmed, -med, -drip.count, -location)
+tmp <- select(data.dexmed.start, pie.id, dexmed.count = drip.count, 
+              start.datetime, stop.datetime)
+
 data.sedatives <- filter(tmp.meds.cont.run, med != "dexmedetomidine") %>%
     semi_join(data.demographics, by = "pie.id") %>%
     inner_join(tmp, by = "pie.id") %>%
-    filter(rate.start < stop.datetime,
-           rate.stop > start.datetime) %>%
+    mutate(overlap = int_overlaps(interval(rate.start, rate.stop),
+                                  interval(start.datetime, stop.datetime))) %>%
+    filter(overlap == TRUE) %>%
     ungroup %>%
     select(pie.id, med) %>%
     mutate(med = factor(med, levels = cont.meds),
