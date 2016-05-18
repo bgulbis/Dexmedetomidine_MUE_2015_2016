@@ -329,10 +329,17 @@ tmp.sofa.gcs <- raw.icu.assess %>%
            assess.datetime < arrive.datetime + days(1)) %>%
     summarize(gcs = min(assess.result))
 
+tmp <- distinct(raw.vent.settings, vent.event)
+
+resp <- c("pao2", "fio2 (%)", "spo2 percent", "poc a o2 sat", "poc a po2", 
+          "poc a %fio2")
 tmp.sofa.resp <- raw.vent.settings %>%
     semi_join(data.demographics, by = "pie.id") %>%
-    filter(vent.event %in% c("pao2", "fio2 (%)")) %>%
-    mutate(vent.result = as.numeric(vent.result)) %>%
+    filter(vent.event %in% resp) %>%
+    mutate(vent.result = as.numeric(vent.result),
+           vent.event = str_replace_all(vent.event, ".*(fio2).*", "fio2"),
+           vent.event = str_replace_all(vent.event, "(spo2 percent|poc a o2 sat)", "spo2"),
+           vent.event = str_replace_all(vent.event, "poc a po2", "pao2")) %>%
     group_by(pie.id, vent.event) %>%
     arrange(vent.datetime) %>%
     inner_join(data.dexmed.first, by = "pie.id") %>%
@@ -342,8 +349,7 @@ tmp.sofa.resp <- raw.vent.settings %>%
               min = min(vent.result)) %>%
     mutate(vent.result = ifelse(vent.event == "pao2", min, max)) %>%
     select(-max, -min) %>%
-    spread(vent.event, vent.result) %>%
-    rename(fio2 = `fio2 (%)`)
+    spread(vent.event, vent.result) 
 
 tmp.sofa.uop <- raw.uop %>%
     semi_join(data.demographics, by = "pie.id") %>%
@@ -352,8 +358,9 @@ tmp.sofa.uop <- raw.uop %>%
     group_by(pie.id) %>%
     arrange(uop.datetime) %>%
     inner_join(data.dexmed.first, by = "pie.id") %>%
-    filter(uop.datetime > arrive.datetime,
-           uop.datetime < arrive.datetime + days(1)) %>%
+    mutate(arrive = floor_date(arrive.datetime, unit = "hour")) %>%
+    filter(uop.datetime >= arrive,
+           uop.datetime <= arrive + days(1)) %>%
     summarize(uop = sum(uop.result))
     
 data.sofa <- select(data.demographics, pie.id) %>%
