@@ -267,14 +267,107 @@ data.safety <- full_join(data.safety.bp, data.safety.hr, by = "pie.id") %>%
     mutate(hypotension = hypotension >= 1,
            bradycardia = bradycardia >= 1)
 
-# raw.labs <- read_edw_data(dir.data, "labs")
-# raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
-# raw.vent.settings <- read_edw_data(dir.data, "vent_settings")
-# raw.uop <- read_edw_data(dir.data, "uop")
+# sofa score -------------------------------------------
 
+raw.labs <- read_edw_data(dir.data, "labs")
+raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
+raw.vent.settings <- read_edw_data(dir.data, "vent_settings")
+raw.uop <- read_edw_data(dir.data, "uop")
+
+tmp.sofa.labs <- raw.labs %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    filter(lab %in% c("platelet", "bili total", "creatinine lvl")) %>%
+    mutate(lab.result = as.numeric(lab.result)) %>%
+    filter(!is.na(lab.result)) %>%
+    group_by(pie.id, lab) %>%
+    arrange(lab.datetime) %>%
+    inner_join(data.dexmed.first, by = "pie.id") %>%
+    filter(lab.datetime > arrive.datetime,
+           lab.datetime < arrive.datetime + days(1)) %>%
+    summarize(max = max(lab.result),
+              min = min(lab.result)) %>%
+    mutate(lab.result = ifelse(lab == "platelet", min, max)) %>%
+    select(-max, -min) %>%
+    spread(lab, lab.result) %>%
+    rename(bili.total = `bili total`,
+           creatinine = `creatinine lvl`)
+
+tmp.sofa.map <- raw.vitals %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    filter(str_detect(vital, "mean arterial")) %>%
+    group_by(pie.id) %>%
+    arrange(vital.datetime) %>%
+    inner_join(data.dexmed.first, by = "pie.id") %>%
+    filter(vital.datetime > arrive.datetime,
+           vital.datetime < arrive.datetime + days(1)) %>%
+    summarize(map = min(vital.result)) 
+
+sofa.vasop <- c("dopamine", "dobutamine", "norepinephrine")
+sofa.vasop <- data_frame(name = sofa.vasop, type = "med", group = "cont")
+
+tmp.sofa.vasop <- raw.meds.cont %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    tidy_data("meds_cont", ref.data = sofa.vasop, sched.data = raw.meds.sched) %>%
+    calc_runtime %>%
+    group_by(pie.id, med) %>%
+    arrange(rate.start) %>%
+    inner_join(data.dexmed.first[c("pie.id", "arrive.datetime")], by = "pie.id") %>%
+    filter(rate.start > arrive.datetime,
+           rate.start < arrive.datetime + days(1)) %>%
+    summarize(med.rate = max(med.rate)) %>%
+    mutate(med = factor(med, levels = sofa.vasop$name)) %>%
+    spread(med, med.rate, drop = FALSE)
+
+tmp.sofa.gcs <- raw.icu.assess %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    filter(assessment == "glasgow coma score") %>%
+    mutate(assess.result = as.numeric(assess.result)) %>%
+    group_by(pie.id) %>%
+    arrange(assess.datetime) %>%
+    inner_join(data.dexmed.first, by = "pie.id") %>%
+    filter(assess.datetime > arrive.datetime,
+           assess.datetime < arrive.datetime + days(1)) %>%
+    summarize(gcs = min(assess.result))
+
+tmp.sofa.resp <- raw.vent.settings %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    filter(vent.event %in% c("pao2", "fio2 (%)")) %>%
+    mutate(vent.result = as.numeric(vent.result)) %>%
+    group_by(pie.id, vent.event) %>%
+    arrange(vent.datetime) %>%
+    inner_join(data.dexmed.first, by = "pie.id") %>%
+    filter(vent.datetime > arrive.datetime,
+           vent.datetime < arrive.datetime + days(1)) %>%
+    summarize(max = max(vent.result),
+              min = min(vent.result)) %>%
+    mutate(vent.result = ifelse(vent.event == "pao2", min, max)) %>%
+    select(-max, -min) %>%
+    spread(vent.event, vent.result) %>%
+    rename(fio2 = `fio2 (%)`)
+
+tmp.sofa.uop <- raw.uop %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    filter(uop.event != "urine count") %>%
+    mutate(uop.result = as.numeric(uop.result)) %>%
+    group_by(pie.id) %>%
+    arrange(uop.datetime) %>%
+    inner_join(data.dexmed.first, by = "pie.id") %>%
+    filter(uop.datetime > arrive.datetime,
+           uop.datetime < arrive.datetime + days(1)) %>%
+    summarize(uop = sum(uop.result))
+    
+data.sofa <- select(data.demographics, pie.id) %>%
+    left_join(tmp.sofa.resp, by = "pie.id") %>%
+    left_join(tmp.sofa.labs, by = "pie.id") %>%
+    left_join(tmp.sofa.map, by = "pie.id") %>%
+    left_join(tmp.sofa.vasop, by = "pie.id") %>%
+    left_join(tmp.sofa.gcs, by = "pie.id") %>%
+    left_join(tmp.sofa.uop, by = "pie.id")
+    
 # remove all excluded patients
 data.dexmed <- semi_join(data.dexmed, data.demographics, by = "pie.id")
 data.dexmed.first <- semi_join(data.dexmed.first, data.demographics, by = "pie.id")
+data.dexmed.start <- semi_join(data.dexmed.start, data.demographics, by = "pie.id")
 data.visits <- semi_join(data.visits, data.demographics, by = "pie.id")
 data.meds.cont <- semi_join(data.meds.cont, data.demographics, by = "pie.id")
 data.meds.cont.sum <- semi_join(data.meds.cont.sum, data.demographics, by = "pie.id")
