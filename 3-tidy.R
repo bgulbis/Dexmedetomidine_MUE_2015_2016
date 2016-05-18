@@ -259,6 +259,14 @@ data.safety.bp <- full_join(tmp.bp.prior, tmp.bp.during,
 data.safety.bp$vasopressor[is.na(data.safety.bp$vasopressor)] <- FALSE
 data.safety.bp$hypotension[is.na(data.safety.bp$hypotension)] <- FALSE
 
+# create combined safety table
+data.safety <- full_join(data.safety.bp, data.safety.hr, by = "pie.id") %>%
+    group_by(pie.id) %>%
+    summarize(hypotension = sum(hypotension),
+              bradycardia = sum(bradycardia)) %>%
+    mutate(hypotension = hypotension >= 1,
+           bradycardia = bradycardia >= 1)
+
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
 # raw.vent.settings <- read_edw_data(dir.data, "vent_settings")
