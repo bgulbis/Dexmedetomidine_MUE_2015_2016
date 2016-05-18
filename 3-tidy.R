@@ -363,6 +363,9 @@ data.sofa <- select(data.demographics, pie.id) %>%
     left_join(tmp.sofa.vasop, by = "pie.id") %>%
     left_join(tmp.sofa.gcs, by = "pie.id") %>%
     left_join(tmp.sofa.uop, by = "pie.id")
+
+# finish -----------------------------------------------
+concat_encounters(data.demographics$pie.id)
     
 # remove all excluded patients
 data.dexmed <- semi_join(data.dexmed, data.demographics, by = "pie.id")
