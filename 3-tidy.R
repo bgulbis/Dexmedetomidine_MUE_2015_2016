@@ -195,7 +195,6 @@ tmp.atropine <- raw.meds.sched %>%
     summarize(atropine = sum(atrop.dexmed)) %>%
     mutate(atropine = atropine > 0)
     
-
 data.safety.hr <- full_join(tmp.hr.prior, tmp.hr.during, 
                             by = c("pie.id", "drip.count")) %>%
     full_join(tmp.atropine, by = c("pie.id", "drip.count")) %>%
@@ -240,9 +239,25 @@ tmp.vasop <- raw.meds.cont %>%
     calc_runtime %>%
     summarize_cont_meds
 
-tmp <- tmp.vasop %>%
-    mutate(drip.interval = interval(start.datetime, stop.datetime))
+tmp.vasop.dexmed <- tmp.vasop %>%
+    select(pie.id, med, vasop.start = start.datetime, vasop.stop = stop.datetime) %>%
+    inner_join(data.dexmed.start[c("pie.id", "drip.count", "start.datetime", 
+                                   "stop.datetime")], by = "pie.id") %>%
+    mutate(vasopressor = int_overlaps(interval(start.datetime, stop.datetime),
+                                 interval(vasop.start, vasop.stop))) %>%
+    filter(vasopressor == TRUE,
+           vasop.start > start.datetime) %>%
+    distinct(pie.id, drip.count, vasopressor)
 
+data.safety.bp <- full_join(tmp.bp.prior, tmp.bp.during, 
+                            by = c("pie.id", "vital", "drip.count")) %>%
+    full_join(tmp.vasop.dexmed, by = c("pie.id", "drip.count")) %>%
+    mutate(low.bp = bp.prior.low < 2 & bp.during.low > 2,
+           hypotension = low.bp == TRUE | vasopressor == TRUE,
+           bp.change.mean = bp.during.mean - bp.prior.mean)
+
+data.safety.bp$vasopressor[is.na(data.safety.bp$vasopressor)] <- FALSE
+data.safety.bp$hypotension[is.na(data.safety.bp$hypotension)] <- FALSE
 
 # raw.labs <- read_edw_data(dir.data, "labs")
 # raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
