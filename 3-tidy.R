@@ -329,8 +329,6 @@ tmp.sofa.gcs <- raw.icu.assess %>%
            assess.datetime < arrive.datetime + days(1)) %>%
     summarize(gcs = min(assess.result))
 
-tmp <- distinct(raw.vent.settings, vent.event)
-
 resp <- c("pao2", "fio2 (%)", "spo2 percent", "poc a o2 sat", "poc a po2", 
           "poc a %fio2")
 tmp.sofa.resp <- raw.vent.settings %>%
@@ -370,6 +368,35 @@ data.sofa <- select(data.demographics, pie.id) %>%
     left_join(tmp.sofa.vasop, by = "pie.id") %>%
     left_join(tmp.sofa.gcs, by = "pie.id") %>%
     left_join(tmp.sofa.uop, by = "pie.id")
+
+# RASS -------------------------------------------------
+
+tmp.rass <- raw.icu.assess %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    filter(assessment == "rass score") %>%
+    mutate(assess.result = as.numeric(assess.result)) %>%
+    inner_join(data.dexmed.start[c("pie.id", "start.datetime", "stop.datetime")], 
+               by = "pie.id") %>%
+    rename(lab.datetime = assess.datetime) %>%
+    group_by(pie.id) %>%
+    arrange(lab.datetime)
+
+tmp.rass.prior <- tmp.rass %>%
+    filter(lab.datetime < start.datetime) %>%
+    mutate(lab.start = first(lab.datetime)) %>%
+    calc_lab_runtime
+
+tmp.rass.during <- tmp.rass %>%
+    filter(lab.datetime >= start.datetime,
+           lab.datetime <= stop.datetime) %>%
+    mutate(lab.start = first(lab.datetime)) %>%
+    calc_lab_runtime
+
+tmp.rass.after <- tmp.rass %>%
+    filter(lab.datetime > stop.datetime) %>%
+    mutate(lab.start = first(lab.datetime)) %>%
+    calc_lab_runtime
+    
 
 # finish -----------------------------------------------
 concat_encounters(data.demographics$pie.id)
