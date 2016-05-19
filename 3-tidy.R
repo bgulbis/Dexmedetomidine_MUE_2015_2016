@@ -379,7 +379,9 @@ tmp.rass <- raw.icu.assess %>%
                by = "pie.id") %>%
     rename(lab.datetime = assess.datetime) %>%
     group_by(pie.id) %>%
-    arrange(lab.datetime)
+    arrange(lab.datetime) %>%
+    mutate(rass.period = ifelse(lab.datetime < start.datetime, "prior",
+                                ifelse(lab.datetime > stop.datetime, "after", "during")))
 
 tmp.rass.prior <- tmp.rass %>%
     filter(lab.datetime < start.datetime) %>%
