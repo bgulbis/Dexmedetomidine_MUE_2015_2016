@@ -400,6 +400,10 @@ tmp.rass.after <- tmp.rass %>%
     calc_lab_runtime
     
 
+# substance abuse --------------------------------------
+
+raw.uds <- read_edw_data(dir.data, "uds", "labs")
+
 # finish -----------------------------------------------
 concat_encounters(data.demographics$pie.id)
     
