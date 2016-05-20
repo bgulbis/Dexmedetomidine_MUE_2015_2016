@@ -269,16 +269,16 @@ data.safety <- full_join(data.safety.bp, data.safety.hr, by = "pie.id") %>%
 
 # sofa score -------------------------------------------
 
-raw.labs <- read_edw_data(dir.data, "labs")
+raw.labs <- read_edw_data(dir.data, "labs") %>%
+    tidy_data("labs")
 raw.icu.assess <- read_edw_data(dir.data, "icu_assess")
 raw.vent.settings <- read_edw_data(dir.data, "vent_settings")
 raw.uop <- read_edw_data(dir.data, "uop")
 
 tmp.sofa.labs <- raw.labs %>%
     semi_join(data.demographics, by = "pie.id") %>%
-    filter(lab %in% c("platelet", "bili total", "creatinine lvl")) %>%
-    mutate(lab.result = as.numeric(lab.result)) %>%
-    filter(!is.na(lab.result)) %>%
+    filter(lab %in% c("platelet", "bili total", "creatinine lvl"),
+           !is.na(lab.result)) %>%
     group_by(pie.id, lab) %>%
     arrange(lab.datetime) %>%
     inner_join(data.dexmed.first, by = "pie.id") %>%
@@ -402,7 +402,13 @@ tmp.rass.after <- tmp.rass %>%
 
 # substance abuse --------------------------------------
 
-raw.uds <- read_edw_data(dir.data, "uds", "labs")
+raw.uds <- read_edw_data(dir.data, "uds", "labs") %>%
+    semi_join(data.demographics, by = "pie.id") 
+
+psa <- data_frame(disease.state = "subst.abuse", type = "CCS", code = c("660", "661"))
+psa.codes <- icd_lookup(psa)
+
+
 
 # finish -----------------------------------------------
 concat_encounters(data.demographics$pie.id)
