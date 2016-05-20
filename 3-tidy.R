@@ -267,7 +267,7 @@ data.safety <- full_join(data.safety.bp, data.safety.hr, by = "pie.id") %>%
     mutate(hypotension = hypotension >= 1,
            bradycardia = bradycardia >= 1)
 
-# sofa score -------------------------------------------
+# SOFA score -------------------------------------------
 
 raw.labs <- read_edw_data(dir.data, "labs") %>%
     tidy_data("labs")
@@ -377,38 +377,25 @@ tmp.rass <- raw.icu.assess %>%
     mutate(assess.result = as.numeric(assess.result)) %>%
     inner_join(data.dexmed.start[c("pie.id", "start.datetime", "stop.datetime")], 
                by = "pie.id") %>%
+    filter(assess.datetime >= start.datetime,
+           assess.datetime <= stop.datetime) %>%
     rename(lab.datetime = assess.datetime) %>%
     group_by(pie.id) %>%
     arrange(lab.datetime) %>%
-    mutate(rass.period = ifelse(lab.datetime < start.datetime, "prior",
-                                ifelse(lab.datetime > stop.datetime, "after", "during")))
-
-tmp.rass.prior <- tmp.rass %>%
-    filter(lab.datetime < start.datetime) %>%
     mutate(lab.start = first(lab.datetime)) %>%
     calc_lab_runtime
-
-tmp.rass.during <- tmp.rass %>%
-    filter(lab.datetime >= start.datetime,
-           lab.datetime <= stop.datetime) %>%
-    mutate(lab.start = first(lab.datetime)) %>%
-    calc_lab_runtime
-
-tmp.rass.after <- tmp.rass %>%
-    filter(lab.datetime > stop.datetime) %>%
-    mutate(lab.start = first(lab.datetime)) %>%
-    calc_lab_runtime
-    
 
 # substance abuse --------------------------------------
 
 raw.uds <- read_edw_data(dir.data, "uds", "labs") %>%
     semi_join(data.demographics, by = "pie.id") 
 
-psa <- data_frame(disease.state = "subst.abuse", type = "CCS", code = c("660", "661"))
+psa <- data_frame(disease.state = "sub.abuse", type = "CCS", code = c("660", "661"))
 psa.codes <- icd_lookup(psa)
 
-
+data.subabuse <- read_edw_data(dir.data, "icd9") %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    tidy_data("icd9", ref.data = psa, patients = data.demographics)
 
 # finish -----------------------------------------------
 concat_encounters(data.demographics$pie.id)
