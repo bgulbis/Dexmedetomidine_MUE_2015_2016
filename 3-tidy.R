@@ -52,7 +52,8 @@ data.meds.cont.sum <- data.meds.cont %>%
               cum.dose = sum(cum.dose, na.rm = TRUE),
               cum.duration = sum(duration, na.rm = TRUE),
               cum.run.time = sum(run.time, na.rm = TRUE),
-              time.wt.avg = sum(auc, na.rm = TRUE) / sum(duration, na.rm = TRUE))
+              time.wt.avg = sum(auc, na.rm = TRUE) / sum(duration, na.rm = TRUE),
+              max.rate = max(max.rate, na.rm = TRUE))
 
 # identify which units patients were in while on dexmedetomidine
 tmp.dexmed <- select(data.meds.cont, pie.id:stop.datetime) %>%
