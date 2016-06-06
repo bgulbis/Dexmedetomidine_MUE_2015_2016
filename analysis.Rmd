@@ -9,6 +9,12 @@ tmp <- get_rds(dir.save)
 library(tableone)
 ```
 
+**Notes**
+
+1. Data were calculated using Chi-Squared for categorical data and t-test or Mann-Whitney (noted by "nonnorm" in the *test* column) for continuous data.
+
+## Patients
+
 ### Demographics
 ```{r results='asis'}
 d <- data.demographics %>%
@@ -17,17 +23,18 @@ d <- data.demographics %>%
            race = factor(race, exclude = c("", "Unknown")),
            disposition = str_replace_all(disposition, regex(".*expired.*|.*hospice.*|.*deceased.*", ignore_case = TRUE), "Deceased/Hospice"),
            disposition = str_replace_all(disposition, regex(".*home.*|.*against.*", ignore_case = TRUE), "Home"),
-           disposition = str_replace_all(disposition, regex(".*dc.*|.*transfer.*|.*care.*|.*skill.*", ignore_case = TRUE), "Transferred"),
-           disposition = factor(disposition))
+           disposition = str_replace_all(disposition, regex(".*dc.*|.*transfer.*|.*care.*|.*skill.*", ignore_case = TRUE), "Transferred"))
 
 vars <- c("age", "sex", "race", "length.stay", "disposition", "sub.abuse")
 fvars <- c("sex", "race", "disposition", "sub.abuse")
 
 tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
-tbl <- print(tbl, printToggle = FALSE)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = c("age", "length.stay"))
 
-knitr::kable(tbl, caption = "Demographics")
+knitr::kable(ptbl, caption = "Demographics")
 ```
+
+### SOFA Score
 
 ## Dexmedetomidine Therapy
 
@@ -36,8 +43,7 @@ knitr::kable(tbl, caption = "Demographics")
 d <- data.manual %>%
     inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") %>%
     mutate(icu.reason = str_trim(icu.reason, side = "both"),
-           icu.reason = str_replace_all(icu.reason, "srug", "surg")) %>%
-    mutate_each(funs(factor), icu.reason, dexmed.indication)
+           icu.reason = str_replace_all(icu.reason, "srug", "surg")) 
 
 vars <- c("icu.reason", "dexmed.indication")
 fvars <- vars
@@ -48,7 +54,32 @@ tbl <- print(tbl, printToggle = FALSE, cramVars = "icu.reason")
 knitr::kable(tbl, caption = "Indications")
 ```
 
-### Concurrent Continuous Sedatives / Analgesics
+### Dexmedetomidine Infusion
+
+```{r results='asis'}
+d <- data.meds.cont.sum %>%
+    filter(med == "dexmedetomidine") %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- names(d[, -c(1, 2, 9)])
+fvars <- "num.infusions"
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = vars[-1])
+
+knitr::kable(ptbl, caption = "Dexmedetomidine Infusion")
+```
+
+**Notes**
+
+1. num.infusions = number of independent dexmedetomidine infusions; a new infusion was defined as > 12 hours off dexmedetomidine
+2. cum.dose = cumulative dexmedetomidine dose received from all infusions, in micrograms / kg
+3. cum.duration = total amount of time, in hours, from start to finish for all infusions; this includes time where the drip may have been off for a short period of time
+4. cum.run.time = total amount of time, in hours, where the dexmedetomidine infusion was actually running
+5. time.wt.avg = dexmedetomidine infusion rate across all infusions, in microgram/kg/hour
+6. max.rate = maximum dexmedetomidine infusion rate, in microgram/kg/hour
+
+### Concurrent Use of Continuous Sedatives / Analgesics
 
 ```{r results='asis'}
 d <- data.sedatives %>%
@@ -62,4 +93,34 @@ tbl <- print(tbl, printToggle = FALSE)
 
 knitr::kable(tbl, caption = "Concurrent Sedatives")
 ```
+
+**Notes**
+
+1. There were no patients who received continuous morphine
+
+## Mechanical Ventilation
+
+```{r results='asis'}
+d <- data.vent %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") %>%
+    mutate(vent.times = as.character(vent.num),
+           vent.times = ifelse(vent.num >= 3, ">/= 3", vent.times),
+           vent.times = ordered(vent.times, levels = c("1", "2", ">/= 3")))
+
+vars <- c("vent", "vent.times", "vent.duration", "dexm.vent.duration")
+fvars <- c("vent", "vent.times")
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE, nonnormal = c("vent.duration", "dexm.vent.duration"))
+
+knitr::kable(tbl, caption = "Mechanical Ventilation")
+```
+
+**Notes**
+
+1. vent.times = number of times patient was intubated
+2. vent.duration = total time on ventilator, in hours, from all intubations
+3. dexm.vent.duration = total time on ventilator and on dexmedetomidine, in hours
+
+## Safety Outcomes
 
