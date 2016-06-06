@@ -124,3 +124,20 @@ knitr::kable(tbl, caption = "Mechanical Ventilation")
 
 ## Safety Outcomes
 
+```{r results='asis'}
+d <- data.safety %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- c("hypotension", "bradycardia", "bp.change", "hr.change")
+fvars <- c("hypotension", "bradycardia")
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE, nonnormal = c("bp.change", "hr.change"))
+
+knitr::kable(tbl, caption = "Safety")
+```
+
+**Notes**
+
+1. Hypotension defined as *new* onset of SBP < 80 mmHg, MAP < 60, or requiring vasopressor initiation
+2. Bradycardia defined as *new* onset of HR < 55 bpm or administration of atropine
