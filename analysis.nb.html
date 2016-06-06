@@ -366,11 +366,96 @@ knitr::kable(tbl, caption = &quot;Indications&quot;)</code></pre>
 </table>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+</div>
+<div id="concurrent-continuous-sedatives-analgesics" class="section level3">
+<h3>Concurrent Continuous Sedatives / Analgesics</h3>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin -->
+<pre class="r"><code>d &lt;- data.sedatives %&gt;%
+    inner_join(data.demographics[, c(&quot;pie.id&quot;, &quot;group&quot;)], by = &quot;pie.id&quot;) 
+vars &lt;- names(d[, -c(1, 9)])
+fvars &lt;- vars
+tbl &lt;- CreateTableOne(vars = vars, strata = &quot;group&quot;, data = d, factorVars = fvars)
+tbl &lt;- print(tbl, printToggle = FALSE)
+knitr::kable(tbl, caption = &quot;Concurrent Sedatives&quot;)</code></pre>
+<!-- rnb-source-end -->
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">mhhs</th>
+<th align="left">tmc</th>
+<th align="left">p</th>
+<th align="left">test</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">n</td>
+<td align="left">232</td>
+<td align="left">368</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">lorazepam = TRUE (%)</td>
+<td align="left">13 ( 5.6)</td>
+<td align="left">9 ( 2.4)</td>
+<td align="left">0.075</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">midazolam = TRUE (%)</td>
+<td align="left">36 ( 15.5)</td>
+<td align="left">64 ( 17.4)</td>
+<td align="left">0.626</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">propofol = TRUE (%)</td>
+<td align="left">80 ( 34.5)</td>
+<td align="left">100 ( 27.2)</td>
+<td align="left">0.070</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">ketamine = TRUE (%)</td>
+<td align="left">0 ( 0.0)</td>
+<td align="left">5 ( 1.4)</td>
+<td align="left">0.186</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">fentanyl = TRUE (%)</td>
+<td align="left">111 ( 47.8)</td>
+<td align="left">211 ( 57.3)</td>
+<td align="left">0.029</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">hydromorphone = TRUE (%)</td>
+<td align="left">2 ( 0.9)</td>
+<td align="left">37 ( 10.1)</td>
+<td align="left">&lt;0.001</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">morphine = FALSE (%)</td>
+<td align="left">232 (100.0)</td>
+<td align="left">368 (100.0)</td>
+<td align="left">NA</td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkRleG1lZGV0b21pZGluZSBNVUUgQW5hbHlzaXMiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpgYGB7cn0NCnNvdXJjZSgiMC1saWJyYXJ5LlIiKQ0KdG1wIDwtIGdldF9yZHMoZGlyLnNhdmUpDQpsaWJyYXJ5KHRhYmxlb25lKQ0KYGBgDQoNCiMjIyBEZW1vZ3JhcGhpY3MNCmBgYHtyIHJlc3VsdHM9J2FzaXMnfQ0KZCA8LSBkYXRhLmRlbW9ncmFwaGljcyAlPiUNCiAgICBpbm5lcl9qb2luKGRhdGEuc3ViYWJ1c2UsIGJ5ID0gInBpZS5pZCIpICU+JQ0KICAgIG11dGF0ZShzZXggPSBmYWN0b3Ioc2V4LCBsZXZlbHMgPSBjKCJGZW1hbGUiLCAiTWFsZSIpKSwNCiAgICAgICAgICAgcmFjZSA9IGZhY3RvcihyYWNlLCBleGNsdWRlID0gYygiIiwgIlVua25vd24iKSksDQogICAgICAgICAgIGRpc3Bvc2l0aW9uID0gc3RyX3JlcGxhY2VfYWxsKGRpc3Bvc2l0aW9uLCByZWdleCgiLipleHBpcmVkLip8Lipob3NwaWNlLip8LipkZWNlYXNlZC4qIiwgaWdub3JlX2Nhc2UgPSBUUlVFKSwgIkRlY2Vhc2VkL0hvc3BpY2UiKSwNCiAgICAgICAgICAgZGlzcG9zaXRpb24gPSBzdHJfcmVwbGFjZV9hbGwoZGlzcG9zaXRpb24sIHJlZ2V4KCIuKmhvbWUuKnwuKmFnYWluc3QuKiIsIGlnbm9yZV9jYXNlID0gVFJVRSksICJIb21lIiksDQogICAgICAgICAgIGRpc3Bvc2l0aW9uID0gc3RyX3JlcGxhY2VfYWxsKGRpc3Bvc2l0aW9uLCByZWdleCgiLipkYy4qfC4qdHJhbnNmZXIuKnwuKmNhcmUuKnwuKnNraWxsLioiLCBpZ25vcmVfY2FzZSA9IFRSVUUpLCAiVHJhbnNmZXJyZWQiKSwNCiAgICAgICAgICAgZGlzcG9zaXRpb24gPSBmYWN0b3IoZGlzcG9zaXRpb24pKQ0KDQp2YXJzIDwtIGMoImFnZSIsICJzZXgiLCAicmFjZSIsICJsZW5ndGguc3RheSIsICJkaXNwb3NpdGlvbiIsICJzdWIuYWJ1c2UiKQ0KZnZhcnMgPC0gYygic2V4IiwgInJhY2UiLCAiZGlzcG9zaXRpb24iLCAic3ViLmFidXNlIikNCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSkNCg0Ka25pdHI6OmthYmxlKHRibCwgY2FwdGlvbiA9ICJEZW1vZ3JhcGhpY3MiKQ0KYGBgDQoNCiMjIERleG1lZGV0b21pZGluZSBUaGVyYXB5DQoNCiMjIyBJbmRpY2F0aW9ucw0KYGBge3IgcmVzdWx0cz0nYXNpcyd9DQpkIDwtIGRhdGEubWFudWFsICU+JQ0KICAgIGlubmVyX2pvaW4oZGF0YS5kZW1vZ3JhcGhpY3NbLCBjKCJwaWUuaWQiLCAiZ3JvdXAiKV0sIGJ5ID0gInBpZS5pZCIpICU+JQ0KICAgIG11dGF0ZShpY3UucmVhc29uID0gc3RyX3RyaW0oaWN1LnJlYXNvbiwgc2lkZSA9ICJib3RoIiksDQogICAgICAgICAgIGljdS5yZWFzb24gPSBzdHJfcmVwbGFjZV9hbGwoaWN1LnJlYXNvbiwgInNydWciLCAic3VyZyIpKSAlPiUNCiAgICBtdXRhdGVfZWFjaChmdW5zKGZhY3RvciksIGljdS5yZWFzb24sIGRleG1lZC5pbmRpY2F0aW9uKQ0KDQp2YXJzIDwtIGMoImljdS5yZWFzb24iLCAiZGV4bWVkLmluZGljYXRpb24iKQ0KZnZhcnMgPC0gdmFycw0KDQp0YmwgPC0gQ3JlYXRlVGFibGVPbmUodmFycyA9IHZhcnMsIHN0cmF0YSA9ICJncm91cCIsIGRhdGEgPSBkLCBmYWN0b3JWYXJzID0gZnZhcnMpDQp0YmwgPC0gcHJpbnQodGJsLCBwcmludFRvZ2dsZSA9IEZBTFNFLCBjcmFtVmFycyA9ICJpY3UucmVhc29uIikNCg0Ka25pdHI6OmthYmxlKHRibCwgY2FwdGlvbiA9ICJJbmRpY2F0aW9ucyIpDQpgYGANCg0KDQo=</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkRleG1lZGV0b21pZGluZSBNVUUgQW5hbHlzaXMiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpgYGB7cn0NCnNvdXJjZSgiMC1saWJyYXJ5LlIiKQ0KdG1wIDwtIGdldF9yZHMoZGlyLnNhdmUpDQpsaWJyYXJ5KHRhYmxlb25lKQ0KYGBgDQoNCiMjIyBEZW1vZ3JhcGhpY3MNCmBgYHtyIHJlc3VsdHM9J2FzaXMnfQ0KZCA8LSBkYXRhLmRlbW9ncmFwaGljcyAlPiUNCiAgICBpbm5lcl9qb2luKGRhdGEuc3ViYWJ1c2UsIGJ5ID0gInBpZS5pZCIpICU+JQ0KICAgIG11dGF0ZShzZXggPSBmYWN0b3Ioc2V4LCBsZXZlbHMgPSBjKCJGZW1hbGUiLCAiTWFsZSIpKSwNCiAgICAgICAgICAgcmFjZSA9IGZhY3RvcihyYWNlLCBleGNsdWRlID0gYygiIiwgIlVua25vd24iKSksDQogICAgICAgICAgIGRpc3Bvc2l0aW9uID0gc3RyX3JlcGxhY2VfYWxsKGRpc3Bvc2l0aW9uLCByZWdleCgiLipleHBpcmVkLip8Lipob3NwaWNlLip8LipkZWNlYXNlZC4qIiwgaWdub3JlX2Nhc2UgPSBUUlVFKSwgIkRlY2Vhc2VkL0hvc3BpY2UiKSwNCiAgICAgICAgICAgZGlzcG9zaXRpb24gPSBzdHJfcmVwbGFjZV9hbGwoZGlzcG9zaXRpb24sIHJlZ2V4KCIuKmhvbWUuKnwuKmFnYWluc3QuKiIsIGlnbm9yZV9jYXNlID0gVFJVRSksICJIb21lIiksDQogICAgICAgICAgIGRpc3Bvc2l0aW9uID0gc3RyX3JlcGxhY2VfYWxsKGRpc3Bvc2l0aW9uLCByZWdleCgiLipkYy4qfC4qdHJhbnNmZXIuKnwuKmNhcmUuKnwuKnNraWxsLioiLCBpZ25vcmVfY2FzZSA9IFRSVUUpLCAiVHJhbnNmZXJyZWQiKSwNCiAgICAgICAgICAgZGlzcG9zaXRpb24gPSBmYWN0b3IoZGlzcG9zaXRpb24pKQ0KDQp2YXJzIDwtIGMoImFnZSIsICJzZXgiLCAicmFjZSIsICJsZW5ndGguc3RheSIsICJkaXNwb3NpdGlvbiIsICJzdWIuYWJ1c2UiKQ0KZnZhcnMgPC0gYygic2V4IiwgInJhY2UiLCAiZGlzcG9zaXRpb24iLCAic3ViLmFidXNlIikNCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSkNCg0Ka25pdHI6OmthYmxlKHRibCwgY2FwdGlvbiA9ICJEZW1vZ3JhcGhpY3MiKQ0KYGBgDQoNCiMjIERleG1lZGV0b21pZGluZSBUaGVyYXB5DQoNCiMjIyBJbmRpY2F0aW9ucw0KYGBge3IgcmVzdWx0cz0nYXNpcyd9DQpkIDwtIGRhdGEubWFudWFsICU+JQ0KICAgIGlubmVyX2pvaW4oZGF0YS5kZW1vZ3JhcGhpY3NbLCBjKCJwaWUuaWQiLCAiZ3JvdXAiKV0sIGJ5ID0gInBpZS5pZCIpICU+JQ0KICAgIG11dGF0ZShpY3UucmVhc29uID0gc3RyX3RyaW0oaWN1LnJlYXNvbiwgc2lkZSA9ICJib3RoIiksDQogICAgICAgICAgIGljdS5yZWFzb24gPSBzdHJfcmVwbGFjZV9hbGwoaWN1LnJlYXNvbiwgInNydWciLCAic3VyZyIpKSAlPiUNCiAgICBtdXRhdGVfZWFjaChmdW5zKGZhY3RvciksIGljdS5yZWFzb24sIGRleG1lZC5pbmRpY2F0aW9uKQ0KDQp2YXJzIDwtIGMoImljdS5yZWFzb24iLCAiZGV4bWVkLmluZGljYXRpb24iKQ0KZnZhcnMgPC0gdmFycw0KDQp0YmwgPC0gQ3JlYXRlVGFibGVPbmUodmFycyA9IHZhcnMsIHN0cmF0YSA9ICJncm91cCIsIGRhdGEgPSBkLCBmYWN0b3JWYXJzID0gZnZhcnMpDQp0YmwgPC0gcHJpbnQodGJsLCBwcmludFRvZ2dsZSA9IEZBTFNFLCBjcmFtVmFycyA9ICJpY3UucmVhc29uIikNCg0Ka25pdHI6OmthYmxlKHRibCwgY2FwdGlvbiA9ICJJbmRpY2F0aW9ucyIpDQpgYGANCg0KIyMjIENvbmN1cnJlbnQgQ29udGludW91cyBTZWRhdGl2ZXMgLyBBbmFsZ2VzaWNzDQoNCmBgYHtyIHJlc3VsdHM9J2FzaXMnfQ0KZCA8LSBkYXRhLnNlZGF0aXZlcyAlPiUNCiAgICBpbm5lcl9qb2luKGRhdGEuZGVtb2dyYXBoaWNzWywgYygicGllLmlkIiwgImdyb3VwIildLCBieSA9ICJwaWUuaWQiKSANCg0KdmFycyA8LSBuYW1lcyhkWywgLWMoMSwgOSldKQ0KZnZhcnMgPC0gdmFycw0KDQp0YmwgPC0gQ3JlYXRlVGFibGVPbmUodmFycyA9IHZhcnMsIHN0cmF0YSA9ICJncm91cCIsIGRhdGEgPSBkLCBmYWN0b3JWYXJzID0gZnZhcnMpDQp0YmwgPC0gcHJpbnQodGJsLCBwcmludFRvZ2dsZSA9IEZBTFNFKQ0KDQprbml0cjo6a2FibGUodGJsLCBjYXB0aW9uID0gIkNvbmN1cnJlbnQgU2VkYXRpdmVzIikNCmBgYA0KDQo=</div>
 
 
 

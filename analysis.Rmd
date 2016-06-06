@@ -48,4 +48,18 @@ tbl <- print(tbl, printToggle = FALSE, cramVars = "icu.reason")
 knitr::kable(tbl, caption = "Indications")
 ```
 
+### Concurrent Continuous Sedatives / Analgesics
+
+```{r results='asis'}
+d <- data.sedatives %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- names(d[, -c(1, 9)])
+fvars <- vars
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE)
+
+knitr::kable(tbl, caption = "Concurrent Sedatives")
+```
 
