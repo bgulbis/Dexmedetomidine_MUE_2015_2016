@@ -18,15 +18,14 @@ library(tableone)
 ### Demographics
 ```{r results='asis'}
 d <- data.demographics %>%
-    inner_join(data.subabuse, by = "pie.id") %>%
     mutate(sex = factor(sex, levels = c("Female", "Male")),
            race = factor(race, exclude = c("", "Unknown")),
            disposition = str_replace_all(disposition, regex(".*expired.*|.*hospice.*|.*deceased.*", ignore_case = TRUE), "Deceased/Hospice"),
            disposition = str_replace_all(disposition, regex(".*home.*|.*against.*", ignore_case = TRUE), "Home"),
            disposition = str_replace_all(disposition, regex(".*dc.*|.*transfer.*|.*care.*|.*skill.*", ignore_case = TRUE), "Transferred"))
 
-vars <- c("age", "sex", "race", "length.stay", "disposition", "sub.abuse")
-fvars <- c("sex", "race", "disposition", "sub.abuse")
+vars <- c("age", "sex", "race", "length.stay", "disposition")
+fvars <- c("sex", "race", "disposition")
 
 tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
 ptbl <- print(tbl, printToggle = FALSE, nonnormal = c("age", "length.stay"))
@@ -35,6 +34,27 @@ knitr::kable(ptbl, caption = "Demographics")
 ```
 
 ### SOFA Score
+
+### Substance Abuse
+
+```{r results='asis'}
+d <- data.subabuse %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- c("etoh.abuse", "etoh.high", "sub.abuse", "uds.pos")
+fvars <- vars
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE)
+
+knitr::kable(tbl, caption = "Substance Abuse")
+```
+
+**Notes**
+
+1. etoh.abuse and sub.abuse are based on ICD-9-CM codes for EtOH/substance abuse.
+2. etoh.high = EtOH level was > 0.08
+3. uds.pos = UDS was positive, excluding benzodiazepines and opiates
 
 ## Dexmedetomidine Therapy
 

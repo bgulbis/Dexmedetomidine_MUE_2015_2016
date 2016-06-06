@@ -387,7 +387,9 @@ tmp.rass <- raw.icu.assess %>%
     filter(assessment == "rass score") %>%
     mutate(assess.result = as.numeric(assess.result)) %>%
     inner_join(data.dexmed.start[c("pie.id", "start.datetime", "stop.datetime")], 
-               by = "pie.id") %>%
+               by = "pie.id") 
+
+tmp.rass.during <- tmp.rass %>%
     filter(assess.datetime >= start.datetime,
            assess.datetime <= stop.datetime) %>%
     rename(lab.datetime = assess.datetime) %>%
@@ -396,17 +398,53 @@ tmp.rass <- raw.icu.assess %>%
     mutate(lab.start = first(lab.datetime)) %>%
     calc_lab_runtime
 
+tmp.rass.pre <- tmp.rass %>%
+    filter(assess.datetime < start.datetime) %>%
+    rename(lab.datetime = assess.datetime) %>%
+    group_by(pie.id) %>%
+    arrange(lab.datetime) %>%
+    mutate(lab.start = first(lab.datetime)) %>%
+    calc_lab_runtime
+
+tmp.rass.post <- tmp.rass %>%
+    filter(assess.datetime > stop.datetime) %>%
+    rename(lab.datetime = assess.datetime) %>%
+    group_by(pie.id) %>%
+    arrange(lab.datetime) %>%
+    mutate(lab.start = first(lab.datetime)) %>%
+    calc_lab_runtime
+
 # substance abuse --------------------------------------
 
-raw.uds <- read_edw_data(dir.data, "uds", "labs") %>%
-    semi_join(data.demographics, by = "pie.id") 
+tmp.uds <- read_edw_data(dir.data, "uds", "labs") %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    filter(lab.result == "Positive",
+           lab != "u benzodia scr",
+           lab != "u opiate scr") %>%
+    group_by(pie.id) %>%
+    summarize(uds.pos = TRUE)
 
-psa <- data_frame(disease.state = "sub.abuse", type = "CCS", code = c("660", "661"))
+tmp.etoh <- read_edw_data(dir.data, "etoh", "labs") %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    mutate(censored.low = str_detect(lab.result, "<"),
+           censored.high = str_detect(lab.result, ">"),
+           lab.result = as.numeric(lab.result)) %>%
+    filter(lab.result > 0.08 | censored.high == TRUE) %>%
+    mutate(etoh.high = TRUE) %>%
+    select(pie.id, etoh.high) %>%
+    distinct
+
+psa <- data_frame(disease.state = c("etoh.abuse", "sub.abuse"), type = "CCS", code = c("660", "661"))
 psa.codes <- icd_lookup(psa)
 
 data.subabuse <- read_edw_data(dir.data, "icd9") %>%
     semi_join(data.demographics, by = "pie.id") %>%
-    tidy_data("icd9", ref.data = psa, patients = data.demographics)
+    tidy_data("icd9", ref.data = psa, patients = data.demographics) %>%
+    left_join(tmp.etoh, by = "pie.id") %>%
+    left_join(tmp.uds, by = "pie.id")
+
+data.subabuse$etoh.high[is.na(data.subabuse$etoh.high)] <- FALSE
+data.subabuse$uds.pos[is.na(data.subabuse$uds.pos)] <- FALSE
 
 # finish -----------------------------------------------
 concat_encounters(data.demographics$pie.id)
