@@ -1,0 +1,51 @@
+---
+title: "Dexmedetomidine MUE Analysis"
+output: html_notebook
+---
+
+```{r}
+source("0-library.R")
+tmp <- get_rds(dir.save)
+library(tableone)
+```
+
+### Demographics
+```{r results='asis'}
+d <- data.demographics %>%
+    inner_join(data.subabuse, by = "pie.id") %>%
+    mutate(sex = factor(sex, levels = c("Female", "Male")),
+           race = factor(race, exclude = c("", "Unknown")),
+           disposition = str_replace_all(disposition, regex(".*expired.*|.*hospice.*|.*deceased.*", ignore_case = TRUE), "Deceased/Hospice"),
+           disposition = str_replace_all(disposition, regex(".*home.*|.*against.*", ignore_case = TRUE), "Home"),
+           disposition = str_replace_all(disposition, regex(".*dc.*|.*transfer.*|.*care.*|.*skill.*", ignore_case = TRUE), "Transferred"),
+           disposition = factor(disposition))
+
+vars <- c("age", "sex", "race", "length.stay", "disposition", "sub.abuse")
+fvars <- c("sex", "race", "disposition", "sub.abuse")
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE)
+
+knitr::kable(tbl, caption = "Demographics")
+```
+
+## Dexmedetomidine Therapy
+
+### Indications
+```{r results='asis'}
+d <- data.manual %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") %>%
+    mutate(icu.reason = str_trim(icu.reason, side = "both"),
+           icu.reason = str_replace_all(icu.reason, "srug", "surg")) %>%
+    mutate_each(funs(factor), icu.reason, dexmed.indication)
+
+vars <- c("icu.reason", "dexmed.indication")
+fvars <- vars
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE, cramVars = "icu.reason")
+
+knitr::kable(tbl, caption = "Indications")
+```
+
+
