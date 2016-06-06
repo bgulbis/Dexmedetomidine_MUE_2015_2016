@@ -161,138 +161,6 @@ library(tableone)</code></pre>
 <h3>Demographics</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin -->
-<pre class="r"><code>d &lt;- data.demographics %&gt;%
-    inner_join(data.subabuse, by = &quot;pie.id&quot;) %&gt;%
-    mutate(sex = factor(sex, levels = c(&quot;Female&quot;, &quot;Male&quot;)),
-           race = factor(race, exclude = c(&quot;&quot;, &quot;Unknown&quot;)),
-           disposition = str_replace_all(disposition, regex(&quot;.*expired.*|.*hospice.*|.*deceased.*&quot;, ignore_case = TRUE), &quot;Deceased/Hospice&quot;),
-           disposition = str_replace_all(disposition, regex(&quot;.*home.*|.*against.*&quot;, ignore_case = TRUE), &quot;Home&quot;),
-           disposition = str_replace_all(disposition, regex(&quot;.*dc.*|.*transfer.*|.*care.*|.*skill.*&quot;, ignore_case = TRUE), &quot;Transferred&quot;))
-vars &lt;- c(&quot;age&quot;, &quot;sex&quot;, &quot;race&quot;, &quot;length.stay&quot;, &quot;disposition&quot;, &quot;sub.abuse&quot;)
-fvars &lt;- c(&quot;sex&quot;, &quot;race&quot;, &quot;disposition&quot;, &quot;sub.abuse&quot;)
-tbl &lt;- CreateTableOne(vars = vars, strata = &quot;group&quot;, data = d, factorVars = fvars)
-ptbl &lt;- print(tbl, printToggle = FALSE, nonnormal = c(&quot;age&quot;, &quot;length.stay&quot;))
-knitr::kable(ptbl, caption = &quot;Demographics&quot;)</code></pre>
-<!-- rnb-source-end -->
-<table>
-<colgroup>
-<col width="31%"></col>
-<col width="24%"></col>
-<col width="24%"></col>
-<col width="8%"></col>
-<col width="10%"></col>
-</colgroup>
-<thead>
-<tr class="header">
-<th align="left"></th>
-<th align="left">mhhs</th>
-<th align="left">tmc</th>
-<th align="left">p</th>
-<th align="left">test</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">n</td>
-<td align="left">232</td>
-<td align="left">368</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">age (median [IQR])</td>
-<td align="left">57.00 [45.00, 65.00]</td>
-<td align="left">55.00 [37.75, 66.25]</td>
-<td align="left">0.124</td>
-<td align="left">nonnorm</td>
-</tr>
-<tr class="odd">
-<td align="left">sex = Male (%)</td>
-<td align="left">157 (67.7)</td>
-<td align="left">244 (66.7)</td>
-<td align="left">0.868</td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">race (%)</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">0.179</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">African American</td>
-<td align="left">59 (27.4)</td>
-<td align="left">66 (20.5)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">Asian</td>
-<td align="left">10 ( 4.7)</td>
-<td align="left">10 ( 3.1)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">Other</td>
-<td align="left">35 (16.3)</td>
-<td align="left">63 (19.6)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">White/Caucasian</td>
-<td align="left">111 (51.6)</td>
-<td align="left">183 (56.8)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">length.stay (median [IQR])</td>
-<td align="left">13.17 [6.71, 20.05]</td>
-<td align="left">14.60 [8.42, 24.05]</td>
-<td align="left">0.052</td>
-<td align="left">nonnorm</td>
-</tr>
-<tr class="even">
-<td align="left">disposition (%)</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">0.603</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">Deceased/Hospice</td>
-<td align="left">24 (10.3)</td>
-<td align="left">36 ( 9.8)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">Home</td>
-<td align="left">131 (56.5)</td>
-<td align="left">195 (53.0)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">Transferred</td>
-<td align="left">77 (33.2)</td>
-<td align="left">137 (37.2)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">sub.abuse = TRUE (%)</td>
-<td align="left">95 (40.9)</td>
-<td align="left">87 (23.6)</td>
-<td align="left">&lt;0.001</td>
-<td align="left"></td>
-</tr>
-</tbody>
-</table>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
@@ -303,63 +171,6 @@ knitr::kable(ptbl, caption = &quot;Demographics&quot;)</code></pre>
 <h3>Substance Abuse</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin -->
-<pre class="r"><code>d &lt;- data.subabuse %&gt;%
-    inner_join(data.demographics[, c(&quot;pie.id&quot;, &quot;group&quot;)], by = &quot;pie.id&quot;) 
-vars &lt;- c(&quot;etoh.abuse&quot;, &quot;etoh.high&quot;, &quot;sub.abuse&quot;, &quot;uds.pos&quot;)
-fvars &lt;- vars
-tbl &lt;- CreateTableOne(vars = vars, strata = &quot;group&quot;, data = d, factorVars = fvars)
-tbl &lt;- print(tbl, printToggle = FALSE)
-knitr::kable(tbl, caption = &quot;Substance Abuse&quot;)</code></pre>
-<!-- rnb-source-end -->
-<table>
-<thead>
-<tr class="header">
-<th align="left"></th>
-<th align="left">mhhs</th>
-<th align="left">tmc</th>
-<th align="left">p</th>
-<th align="left">test</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">n</td>
-<td align="left">232</td>
-<td align="left">368</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">etoh.abuse = TRUE (%)</td>
-<td align="left">59 (25.4)</td>
-<td align="left">59 (16.0)</td>
-<td align="left">0.007</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">etoh.high = TRUE (%)</td>
-<td align="left">15 ( 6.5)</td>
-<td align="left">26 ( 7.1)</td>
-<td align="left">0.907</td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">sub.abuse = TRUE (%)</td>
-<td align="left">50 (21.6)</td>
-<td align="left">35 ( 9.5)</td>
-<td align="left">&lt;0.001</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">uds.pos = TRUE (%)</td>
-<td align="left">36 (15.5)</td>
-<td align="left">37 (10.1)</td>
-<td align="left">0.062</td>
-<td align="left"></td>
-</tr>
-</tbody>
-</table>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p><strong>Notes</strong></p>
@@ -376,79 +187,6 @@ knitr::kable(tbl, caption = &quot;Substance Abuse&quot;)</code></pre>
 <h3>Indications</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin -->
-<pre class="r"><code>d &lt;- data.manual %&gt;%
-    inner_join(data.demographics[, c(&quot;pie.id&quot;, &quot;group&quot;)], by = &quot;pie.id&quot;) %&gt;%
-    mutate(icu.reason = str_trim(icu.reason, side = &quot;both&quot;),
-           icu.reason = str_replace_all(icu.reason, &quot;srug&quot;, &quot;surg&quot;)) 
-vars &lt;- c(&quot;icu.reason&quot;, &quot;dexmed.indication&quot;)
-fvars &lt;- vars
-tbl &lt;- CreateTableOne(vars = vars, strata = &quot;group&quot;, data = d, factorVars = fvars)
-tbl &lt;- print(tbl, printToggle = FALSE, cramVars = &quot;icu.reason&quot;)
-knitr::kable(tbl, caption = &quot;Indications&quot;)</code></pre>
-<!-- rnb-source-end -->
-<table>
-<thead>
-<tr class="header">
-<th align="left"></th>
-<th align="left">mhhs</th>
-<th align="left">tmc</th>
-<th align="left">p</th>
-<th align="left">test</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">n</td>
-<td align="left">232</td>
-<td align="left">368</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">icu.reason = med/surg (%)</td>
-<td align="left">195/37 (84.1/15.9)</td>
-<td align="left">151/217 (41.0/59.0)</td>
-<td align="left">&lt;0.001</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">dexmed.indication (%)</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">&lt;0.001</td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">etoh</td>
-<td align="left">38 (16.4)</td>
-<td align="left">30 ( 8.2)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">icused</td>
-<td align="left">183 (78.9)</td>
-<td align="left">283 (76.9)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">procsed</td>
-<td align="left">11 ( 4.7)</td>
-<td align="left">54 (14.7)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">shiv</td>
-<td align="left">0 ( 0.0)</td>
-<td align="left">1 ( 0.3)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-</tbody>
-</table>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
@@ -456,106 +194,6 @@ knitr::kable(tbl, caption = &quot;Indications&quot;)</code></pre>
 <h3>Dexmedetomidine Infusion</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin -->
-<pre class="r"><code>d &lt;- data.meds.cont.sum %&gt;%
-    filter(med == &quot;dexmedetomidine&quot;) %&gt;%
-    inner_join(data.demographics[, c(&quot;pie.id&quot;, &quot;group&quot;)], by = &quot;pie.id&quot;) 
-vars &lt;- names(d[, -c(1, 2, 9)])
-fvars &lt;- &quot;num.infusions&quot;
-tbl &lt;- CreateTableOne(vars = vars, strata = &quot;group&quot;, data = d, factorVars = fvars)
-ptbl &lt;- print(tbl, printToggle = FALSE, nonnormal = vars[-1])
-knitr::kable(ptbl, caption = &quot;Dexmedetomidine Infusion&quot;)</code></pre>
-<!-- rnb-source-end -->
-<table>
-<colgroup>
-<col width="33%"></col>
-<col width="24%"></col>
-<col width="24%"></col>
-<col width="8%"></col>
-<col width="10%"></col>
-</colgroup>
-<thead>
-<tr class="header">
-<th align="left"></th>
-<th align="left">mhhs</th>
-<th align="left">tmc</th>
-<th align="left">p</th>
-<th align="left">test</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">n</td>
-<td align="left">232</td>
-<td align="left">368</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">num.infusions (%)</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">0.968</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">1</td>
-<td align="left">213 (91.8)</td>
-<td align="left">336 (91.3)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">2</td>
-<td align="left">17 ( 7.3)</td>
-<td align="left">29 ( 7.9)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">3</td>
-<td align="left">2 ( 0.9)</td>
-<td align="left">3 ( 0.8)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">cum.dose (median [IQR])</td>
-<td align="left">7.97 [3.03, 19.50]</td>
-<td align="left">7.07 [2.13, 22.62]</td>
-<td align="left">0.395</td>
-<td align="left">nonnorm</td>
-</tr>
-<tr class="odd">
-<td align="left">cum.duration (median [IQR])</td>
-<td align="left">20.92 [9.22, 41.24]</td>
-<td align="left">21.06 [7.47, 49.10]</td>
-<td align="left">0.957</td>
-<td align="left">nonnorm</td>
-</tr>
-<tr class="even">
-<td align="left">cum.run.time (median [IQR])</td>
-<td align="left">18.83 [8.52, 40.58]</td>
-<td align="left">20.00 [7.08, 46.73]</td>
-<td align="left">0.970</td>
-<td align="left">nonnorm</td>
-</tr>
-<tr class="odd">
-<td align="left">time.wt.avg (median [IQR])</td>
-<td align="left">0.39 [0.27, 0.52]</td>
-<td align="left">0.33 [0.20, 0.49]</td>
-<td align="left">0.004</td>
-<td align="left">nonnorm</td>
-</tr>
-<tr class="even">
-<td align="left">max.rate (median [IQR])</td>
-<td align="left">0.70 [0.40, 0.70]</td>
-<td align="left">0.60 [0.40, 0.70]</td>
-<td align="left">0.565</td>
-<td align="left">nonnorm</td>
-</tr>
-</tbody>
-</table>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p><strong>Notes</strong></p>
@@ -572,84 +210,6 @@ knitr::kable(ptbl, caption = &quot;Dexmedetomidine Infusion&quot;)</code></pre>
 <h3>Concurrent Use of Continuous Sedatives / Analgesics</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin -->
-<pre class="r"><code>d &lt;- data.sedatives %&gt;%
-    inner_join(data.demographics[, c(&quot;pie.id&quot;, &quot;group&quot;)], by = &quot;pie.id&quot;) 
-vars &lt;- names(d[, -c(1, 9)])
-fvars &lt;- vars
-tbl &lt;- CreateTableOne(vars = vars, strata = &quot;group&quot;, data = d, factorVars = fvars)
-tbl &lt;- print(tbl, printToggle = FALSE)
-knitr::kable(tbl, caption = &quot;Concurrent Sedatives&quot;)</code></pre>
-<!-- rnb-source-end -->
-<table>
-<thead>
-<tr class="header">
-<th align="left"></th>
-<th align="left">mhhs</th>
-<th align="left">tmc</th>
-<th align="left">p</th>
-<th align="left">test</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">n</td>
-<td align="left">232</td>
-<td align="left">368</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">lorazepam = TRUE (%)</td>
-<td align="left">13 ( 5.6)</td>
-<td align="left">9 ( 2.4)</td>
-<td align="left">0.075</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">midazolam = TRUE (%)</td>
-<td align="left">36 ( 15.5)</td>
-<td align="left">64 ( 17.4)</td>
-<td align="left">0.626</td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">propofol = TRUE (%)</td>
-<td align="left">80 ( 34.5)</td>
-<td align="left">100 ( 27.2)</td>
-<td align="left">0.070</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">ketamine = TRUE (%)</td>
-<td align="left">0 ( 0.0)</td>
-<td align="left">5 ( 1.4)</td>
-<td align="left">0.186</td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">fentanyl = TRUE (%)</td>
-<td align="left">111 ( 47.8)</td>
-<td align="left">211 ( 57.3)</td>
-<td align="left">0.029</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">hydromorphone = TRUE (%)</td>
-<td align="left">2 ( 0.9)</td>
-<td align="left">37 ( 10.1)</td>
-<td align="left">&lt;0.001</td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">morphine = FALSE (%)</td>
-<td align="left">232 (100.0)</td>
-<td align="left">368 (100.0)</td>
-<td align="left">NA</td>
-<td align="left"></td>
-</tr>
-</tbody>
-</table>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p><strong>Notes</strong></p>
@@ -662,94 +222,6 @@ knitr::kable(tbl, caption = &quot;Concurrent Sedatives&quot;)</code></pre>
 <h2>Mechanical Ventilation</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin -->
-<pre class="r"><code>d &lt;- data.vent %&gt;%
-    inner_join(data.demographics[, c(&quot;pie.id&quot;, &quot;group&quot;)], by = &quot;pie.id&quot;) %&gt;%
-    mutate(vent.times = as.character(vent.num),
-           vent.times = ifelse(vent.num &gt;= 3, &quot;&gt;/= 3&quot;, vent.times),
-           vent.times = ordered(vent.times, levels = c(&quot;1&quot;, &quot;2&quot;, &quot;&gt;/= 3&quot;)))
-vars &lt;- c(&quot;vent&quot;, &quot;vent.times&quot;, &quot;vent.duration&quot;, &quot;dexm.vent.duration&quot;)
-fvars &lt;- c(&quot;vent&quot;, &quot;vent.times&quot;)
-tbl &lt;- CreateTableOne(vars = vars, strata = &quot;group&quot;, data = d, factorVars = fvars)
-tbl &lt;- print(tbl, printToggle = FALSE, nonnormal = c(&quot;vent.duration&quot;, &quot;dexm.vent.duration&quot;))
-knitr::kable(tbl, caption = &quot;Mechanical Ventilation&quot;)</code></pre>
-<!-- rnb-source-end -->
-<table>
-<colgroup>
-<col width="35%"></col>
-<col width="24%"></col>
-<col width="24%"></col>
-<col width="7%"></col>
-<col width="9%"></col>
-</colgroup>
-<thead>
-<tr class="header">
-<th align="left"></th>
-<th align="left">mhhs</th>
-<th align="left">tmc</th>
-<th align="left">p</th>
-<th align="left">test</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">n</td>
-<td align="left">232</td>
-<td align="left">368</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">vent = TRUE (%)</td>
-<td align="left">200 (86.2)</td>
-<td align="left">336 (91.3)</td>
-<td align="left">0.067</td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">vent.times (%)</td>
-<td align="left"></td>
-<td align="left"></td>
-<td align="left">0.868</td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">1</td>
-<td align="left">150 (75.0)</td>
-<td align="left">245 (72.9)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">2</td>
-<td align="left">31 (15.5)</td>
-<td align="left">56 (16.7)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="even">
-<td align="left">&gt;/= 3</td>
-<td align="left">19 ( 9.5)</td>
-<td align="left">35 (10.4)</td>
-<td align="left"></td>
-<td align="left"></td>
-</tr>
-<tr class="odd">
-<td align="left">vent.duration (median [IQR])</td>
-<td align="left">130.46 [54.69, 282.10]</td>
-<td align="left">115.88 [32.52, 247.72]</td>
-<td align="left">0.032</td>
-<td align="left">nonnorm</td>
-</tr>
-<tr class="even">
-<td align="left">dexm.vent.duration (median [IQR])</td>
-<td align="left">17.30 [4.77, 39.92]</td>
-<td align="left">17.38 [3.25, 46.26]</td>
-<td align="left">0.900</td>
-<td align="left">nonnorm</td>
-</tr>
-</tbody>
-</table>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p><strong>Notes</strong></p>
@@ -758,28 +230,19 @@ knitr::kable(tbl, caption = &quot;Mechanical Ventilation&quot;)</code></pre>
 <li>vent.duration = total time on ventilator, in hours, from all intubations</li>
 <li>dexm.vent.duration = total time on ventilator and on dexmedetomidine, in hours</li>
 </ol>
-</div>
-<div id="safety-outcomes" class="section level2">
-<h2>Safety Outcomes</h2>
+<div id="rass" class="section level3">
+<h3>RASS</h3>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin -->
-<pre class="r"><code>d &lt;- data.safety %&gt;%
+<pre class="r"><code>d &lt;- data.rass %&gt;%
     inner_join(data.demographics[, c(&quot;pie.id&quot;, &quot;group&quot;)], by = &quot;pie.id&quot;) 
-vars &lt;- c(&quot;hypotension&quot;, &quot;bradycardia&quot;, &quot;bp.change&quot;, &quot;hr.change&quot;)
-fvars &lt;- c(&quot;hypotension&quot;, &quot;bradycardia&quot;)
-tbl &lt;- CreateTableOne(vars = vars, strata = &quot;group&quot;, data = d, factorVars = fvars)
-tbl &lt;- print(tbl, printToggle = FALSE, nonnormal = c(&quot;bp.change&quot;, &quot;hr.change&quot;))
-knitr::kable(tbl, caption = &quot;Safety&quot;)</code></pre>
+vars &lt;- names(data.rass)[-1]
+tbl &lt;- CreateTableOne(vars = vars, strata = &quot;group&quot;, data = d)
+ptbl &lt;- print(tbl, printToggle = FALSE)
+knitr::kable(ptbl, caption = &quot;RASS&quot;)</code></pre>
 <!-- rnb-source-end -->
-<table style="width:100%;">
-<colgroup>
-<col width="29%"></col>
-<col width="26%"></col>
-<col width="25%"></col>
-<col width="9%"></col>
-<col width="10%"></col>
-</colgroup>
+<table>
 <thead>
 <tr class="header">
 <th align="left"></th>
@@ -792,41 +255,88 @@ knitr::kable(tbl, caption = &quot;Safety&quot;)</code></pre>
 <tbody>
 <tr class="odd">
 <td align="left">n</td>
-<td align="left">232</td>
-<td align="left">368</td>
+<td align="left">209</td>
+<td align="left">317</td>
 <td align="left"></td>
 <td align="left"></td>
 </tr>
 <tr class="even">
-<td align="left">hypotension = TRUE (%)</td>
-<td align="left">51 (22.0)</td>
-<td align="left">108 (29.3)</td>
-<td align="left">0.058</td>
+<td align="left">perc.time.goal.pre (mean (sd))</td>
+<td align="left">0.42 (0.34)</td>
+<td align="left">0.39 (0.36)</td>
+<td align="left">0.281</td>
 <td align="left"></td>
 </tr>
 <tr class="odd">
-<td align="left">bradycardia = TRUE (%)</td>
-<td align="left">24 (10.3)</td>
-<td align="left">38 (10.3)</td>
-<td align="left">1.000</td>
+<td align="left">perc.time.above.pre (mean (sd))</td>
+<td align="left">0.31 (0.33)</td>
+<td align="left">0.35 (0.36)</td>
+<td align="left">0.178</td>
 <td align="left"></td>
 </tr>
 <tr class="even">
-<td align="left">bp.change (median [IQR])</td>
-<td align="left">-4.08 [-13.65, 3.58]</td>
-<td align="left">-9.02 [-19.16, 0.12]</td>
-<td align="left">&lt;0.001</td>
-<td align="left">nonnorm</td>
+<td align="left">perc.time.below.pre (mean (sd))</td>
+<td align="left">0.27 (0.32)</td>
+<td align="left">0.26 (0.35)</td>
+<td align="left">0.836</td>
+<td align="left"></td>
 </tr>
 <tr class="odd">
-<td align="left">hr.change (median [IQR])</td>
-<td align="left">-8.36 [-16.21, -0.63]</td>
-<td align="left">-6.81 [-16.08, 2.01]</td>
-<td align="left">0.097</td>
-<td align="left">nonnorm</td>
+<td align="left">perc.time.goal (mean (sd))</td>
+<td align="left">0.44 (0.34)</td>
+<td align="left">0.43 (0.35)</td>
+<td align="left">0.868</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">perc.time.above (mean (sd))</td>
+<td align="left">0.36 (0.33)</td>
+<td align="left">0.38 (0.35)</td>
+<td align="left">0.429</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">perc.time.below (mean (sd))</td>
+<td align="left">0.21 (0.30)</td>
+<td align="left">0.18 (0.30)</td>
+<td align="left">0.482</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">perc.time.goal.post (mean (sd))</td>
+<td align="left">0.42 (0.34)</td>
+<td align="left">0.39 (0.36)</td>
+<td align="left">0.281</td>
+<td align="left"></td>
+</tr>
+<tr class="odd">
+<td align="left">perc.time.above.post (mean (sd))</td>
+<td align="left">0.31 (0.33)</td>
+<td align="left">0.35 (0.36)</td>
+<td align="left">0.178</td>
+<td align="left"></td>
+</tr>
+<tr class="even">
+<td align="left">perc.time.below.post (mean (sd))</td>
+<td align="left">0.27 (0.32)</td>
+<td align="left">0.26 (0.35)</td>
+<td align="left">0.836</td>
+<td align="left"></td>
 </tr>
 </tbody>
 </table>
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p><strong>Notes</strong></p>
+<ol style="list-style-type: decimal">
+<li>Data represents the percent of time the RASS score was at goal (RASS of -1 or -2), above goal (RASS -3 to -5), or below goal (RASS of 0 to 4) in the 24-hours prior to dexmedetomidine initiation (pre), during dexmedetomidine, or in the 24-hours after dexmedetomidine (post)</li>
+</ol>
+</div>
+</div>
+<div id="safety-outcomes" class="section level2">
+<h2>Safety Outcomes</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p><strong>Notes</strong></p>
@@ -837,7 +347,7 @@ knitr::kable(tbl, caption = &quot;Safety&quot;)</code></pre>
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkRleG1lZGV0b21pZGluZSBNVUUgQW5hbHlzaXMiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpgYGB7cn0NCnNvdXJjZSgiMC1saWJyYXJ5LlIiKQ0KdG1wIDwtIGdldF9yZHMoZGlyLnNhdmUpDQpsaWJyYXJ5KHRhYmxlb25lKQ0KYGBgDQoNCioqTm90ZXMqKg0KDQoxLiBEYXRhIHdlcmUgY2FsY3VsYXRlZCB1c2luZyBDaGktU3F1YXJlZCBmb3IgY2F0ZWdvcmljYWwgZGF0YSBhbmQgdC10ZXN0IG9yIE1hbm4tV2hpdG5leSAobm90ZWQgYnkgIm5vbm5vcm0iIGluIHRoZSAqdGVzdCogY29sdW1uKSBmb3IgY29udGludW91cyBkYXRhLg0KDQojIyBQYXRpZW50cw0KDQojIyMgRGVtb2dyYXBoaWNzDQpgYGB7ciByZXN1bHRzPSdhc2lzJ30NCmQgPC0gZGF0YS5kZW1vZ3JhcGhpY3MgJT4lDQogICAgbXV0YXRlKHNleCA9IGZhY3RvcihzZXgsIGxldmVscyA9IGMoIkZlbWFsZSIsICJNYWxlIikpLA0KICAgICAgICAgICByYWNlID0gZmFjdG9yKHJhY2UsIGV4Y2x1ZGUgPSBjKCIiLCAiVW5rbm93biIpKSwNCiAgICAgICAgICAgZGlzcG9zaXRpb24gPSBzdHJfcmVwbGFjZV9hbGwoZGlzcG9zaXRpb24sIHJlZ2V4KCIuKmV4cGlyZWQuKnwuKmhvc3BpY2UuKnwuKmRlY2Vhc2VkLioiLCBpZ25vcmVfY2FzZSA9IFRSVUUpLCAiRGVjZWFzZWQvSG9zcGljZSIpLA0KICAgICAgICAgICBkaXNwb3NpdGlvbiA9IHN0cl9yZXBsYWNlX2FsbChkaXNwb3NpdGlvbiwgcmVnZXgoIi4qaG9tZS4qfC4qYWdhaW5zdC4qIiwgaWdub3JlX2Nhc2UgPSBUUlVFKSwgIkhvbWUiKSwNCiAgICAgICAgICAgZGlzcG9zaXRpb24gPSBzdHJfcmVwbGFjZV9hbGwoZGlzcG9zaXRpb24sIHJlZ2V4KCIuKmRjLip8Lip0cmFuc2Zlci4qfC4qY2FyZS4qfC4qc2tpbGwuKiIsIGlnbm9yZV9jYXNlID0gVFJVRSksICJUcmFuc2ZlcnJlZCIpKQ0KDQp2YXJzIDwtIGMoImFnZSIsICJzZXgiLCAicmFjZSIsICJsZW5ndGguc3RheSIsICJkaXNwb3NpdGlvbiIpDQpmdmFycyA8LSBjKCJzZXgiLCAicmFjZSIsICJkaXNwb3NpdGlvbiIpDQoNCnRibCA8LSBDcmVhdGVUYWJsZU9uZSh2YXJzID0gdmFycywgc3RyYXRhID0gImdyb3VwIiwgZGF0YSA9IGQsIGZhY3RvclZhcnMgPSBmdmFycykNCnB0YmwgPC0gcHJpbnQodGJsLCBwcmludFRvZ2dsZSA9IEZBTFNFLCBub25ub3JtYWwgPSBjKCJhZ2UiLCAibGVuZ3RoLnN0YXkiKSkNCg0Ka25pdHI6OmthYmxlKHB0YmwsIGNhcHRpb24gPSAiRGVtb2dyYXBoaWNzIikNCmBgYA0KDQojIyMgU09GQSBTY29yZQ0KDQojIyMgU3Vic3RhbmNlIEFidXNlDQoNCmBgYHtyIHJlc3VsdHM9J2FzaXMnfQ0KZCA8LSBkYXRhLnN1YmFidXNlICU+JQ0KICAgIGlubmVyX2pvaW4oZGF0YS5kZW1vZ3JhcGhpY3NbLCBjKCJwaWUuaWQiLCAiZ3JvdXAiKV0sIGJ5ID0gInBpZS5pZCIpIA0KDQp2YXJzIDwtIGMoImV0b2guYWJ1c2UiLCAiZXRvaC5oaWdoIiwgInN1Yi5hYnVzZSIsICJ1ZHMucG9zIikNCmZ2YXJzIDwtIHZhcnMNCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSkNCg0Ka25pdHI6OmthYmxlKHRibCwgY2FwdGlvbiA9ICJTdWJzdGFuY2UgQWJ1c2UiKQ0KYGBgDQoNCioqTm90ZXMqKg0KDQoxLiBldG9oLmFidXNlIGFuZCBzdWIuYWJ1c2UgYXJlIGJhc2VkIG9uIElDRC05LUNNIGNvZGVzIGZvciBFdE9IL3N1YnN0YW5jZSBhYnVzZS4NCjIuIGV0b2guaGlnaCA9IEV0T0ggbGV2ZWwgd2FzID4gMC4wOA0KMy4gdWRzLnBvcyA9IFVEUyB3YXMgcG9zaXRpdmUsIGV4Y2x1ZGluZyBiZW56b2RpYXplcGluZXMgYW5kIG9waWF0ZXMNCg0KIyMgRGV4bWVkZXRvbWlkaW5lIFRoZXJhcHkNCg0KIyMjIEluZGljYXRpb25zDQpgYGB7ciByZXN1bHRzPSdhc2lzJ30NCmQgPC0gZGF0YS5tYW51YWwgJT4lDQogICAgaW5uZXJfam9pbihkYXRhLmRlbW9ncmFwaGljc1ssIGMoInBpZS5pZCIsICJncm91cCIpXSwgYnkgPSAicGllLmlkIikgJT4lDQogICAgbXV0YXRlKGljdS5yZWFzb24gPSBzdHJfdHJpbShpY3UucmVhc29uLCBzaWRlID0gImJvdGgiKSwNCiAgICAgICAgICAgaWN1LnJlYXNvbiA9IHN0cl9yZXBsYWNlX2FsbChpY3UucmVhc29uLCAic3J1ZyIsICJzdXJnIikpIA0KDQp2YXJzIDwtIGMoImljdS5yZWFzb24iLCAiZGV4bWVkLmluZGljYXRpb24iKQ0KZnZhcnMgPC0gdmFycw0KDQp0YmwgPC0gQ3JlYXRlVGFibGVPbmUodmFycyA9IHZhcnMsIHN0cmF0YSA9ICJncm91cCIsIGRhdGEgPSBkLCBmYWN0b3JWYXJzID0gZnZhcnMpDQp0YmwgPC0gcHJpbnQodGJsLCBwcmludFRvZ2dsZSA9IEZBTFNFLCBjcmFtVmFycyA9ICJpY3UucmVhc29uIikNCg0Ka25pdHI6OmthYmxlKHRibCwgY2FwdGlvbiA9ICJJbmRpY2F0aW9ucyIpDQpgYGANCg0KIyMjIERleG1lZGV0b21pZGluZSBJbmZ1c2lvbg0KDQpgYGB7ciByZXN1bHRzPSdhc2lzJ30NCmQgPC0gZGF0YS5tZWRzLmNvbnQuc3VtICU+JQ0KICAgIGZpbHRlcihtZWQgPT0gImRleG1lZGV0b21pZGluZSIpICU+JQ0KICAgIGlubmVyX2pvaW4oZGF0YS5kZW1vZ3JhcGhpY3NbLCBjKCJwaWUuaWQiLCAiZ3JvdXAiKV0sIGJ5ID0gInBpZS5pZCIpIA0KDQp2YXJzIDwtIG5hbWVzKGRbLCAtYygxLCAyLCA5KV0pDQpmdmFycyA8LSAibnVtLmluZnVzaW9ucyINCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KcHRibCA8LSBwcmludCh0YmwsIHByaW50VG9nZ2xlID0gRkFMU0UsIG5vbm5vcm1hbCA9IHZhcnNbLTFdKQ0KDQprbml0cjo6a2FibGUocHRibCwgY2FwdGlvbiA9ICJEZXhtZWRldG9taWRpbmUgSW5mdXNpb24iKQ0KYGBgDQoNCioqTm90ZXMqKg0KDQoxLiBudW0uaW5mdXNpb25zID0gbnVtYmVyIG9mIGluZGVwZW5kZW50IGRleG1lZGV0b21pZGluZSBpbmZ1c2lvbnM7IGEgbmV3IGluZnVzaW9uIHdhcyBkZWZpbmVkIGFzID4gMTIgaG91cnMgb2ZmIGRleG1lZGV0b21pZGluZQ0KMi4gY3VtLmRvc2UgPSBjdW11bGF0aXZlIGRleG1lZGV0b21pZGluZSBkb3NlIHJlY2VpdmVkIGZyb20gYWxsIGluZnVzaW9ucywgaW4gbWljcm9ncmFtcyAvIGtnDQozLiBjdW0uZHVyYXRpb24gPSB0b3RhbCBhbW91bnQgb2YgdGltZSwgaW4gaG91cnMsIGZyb20gc3RhcnQgdG8gZmluaXNoIGZvciBhbGwgaW5mdXNpb25zOyB0aGlzIGluY2x1ZGVzIHRpbWUgd2hlcmUgdGhlIGRyaXAgbWF5IGhhdmUgYmVlbiBvZmYgZm9yIGEgc2hvcnQgcGVyaW9kIG9mIHRpbWUNCjQuIGN1bS5ydW4udGltZSA9IHRvdGFsIGFtb3VudCBvZiB0aW1lLCBpbiBob3Vycywgd2hlcmUgdGhlIGRleG1lZGV0b21pZGluZSBpbmZ1c2lvbiB3YXMgYWN0dWFsbHkgcnVubmluZw0KNS4gdGltZS53dC5hdmcgPSBkZXhtZWRldG9taWRpbmUgaW5mdXNpb24gcmF0ZSBhY3Jvc3MgYWxsIGluZnVzaW9ucywgaW4gbWljcm9ncmFtL2tnL2hvdXINCjYuIG1heC5yYXRlID0gbWF4aW11bSBkZXhtZWRldG9taWRpbmUgaW5mdXNpb24gcmF0ZSwgaW4gbWljcm9ncmFtL2tnL2hvdXINCg0KIyMjIENvbmN1cnJlbnQgVXNlIG9mIENvbnRpbnVvdXMgU2VkYXRpdmVzIC8gQW5hbGdlc2ljcw0KDQpgYGB7ciByZXN1bHRzPSdhc2lzJ30NCmQgPC0gZGF0YS5zZWRhdGl2ZXMgJT4lDQogICAgaW5uZXJfam9pbihkYXRhLmRlbW9ncmFwaGljc1ssIGMoInBpZS5pZCIsICJncm91cCIpXSwgYnkgPSAicGllLmlkIikgDQoNCnZhcnMgPC0gbmFtZXMoZFssIC1jKDEsIDkpXSkNCmZ2YXJzIDwtIHZhcnMNCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSkNCg0Ka25pdHI6OmthYmxlKHRibCwgY2FwdGlvbiA9ICJDb25jdXJyZW50IFNlZGF0aXZlcyIpDQpgYGANCg0KKipOb3RlcyoqDQoNCjEuIFRoZXJlIHdlcmUgbm8gcGF0aWVudHMgd2hvIHJlY2VpdmVkIGNvbnRpbnVvdXMgbW9ycGhpbmUNCg0KIyMgTWVjaGFuaWNhbCBWZW50aWxhdGlvbg0KDQpgYGB7ciByZXN1bHRzPSdhc2lzJ30NCmQgPC0gZGF0YS52ZW50ICU+JQ0KICAgIGlubmVyX2pvaW4oZGF0YS5kZW1vZ3JhcGhpY3NbLCBjKCJwaWUuaWQiLCAiZ3JvdXAiKV0sIGJ5ID0gInBpZS5pZCIpICU+JQ0KICAgIG11dGF0ZSh2ZW50LnRpbWVzID0gYXMuY2hhcmFjdGVyKHZlbnQubnVtKSwNCiAgICAgICAgICAgdmVudC50aW1lcyA9IGlmZWxzZSh2ZW50Lm51bSA+PSAzLCAiPi89IDMiLCB2ZW50LnRpbWVzKSwNCiAgICAgICAgICAgdmVudC50aW1lcyA9IG9yZGVyZWQodmVudC50aW1lcywgbGV2ZWxzID0gYygiMSIsICIyIiwgIj4vPSAzIikpKQ0KDQp2YXJzIDwtIGMoInZlbnQiLCAidmVudC50aW1lcyIsICJ2ZW50LmR1cmF0aW9uIiwgImRleG0udmVudC5kdXJhdGlvbiIpDQpmdmFycyA8LSBjKCJ2ZW50IiwgInZlbnQudGltZXMiKQ0KDQp0YmwgPC0gQ3JlYXRlVGFibGVPbmUodmFycyA9IHZhcnMsIHN0cmF0YSA9ICJncm91cCIsIGRhdGEgPSBkLCBmYWN0b3JWYXJzID0gZnZhcnMpDQp0YmwgPC0gcHJpbnQodGJsLCBwcmludFRvZ2dsZSA9IEZBTFNFLCBub25ub3JtYWwgPSBjKCJ2ZW50LmR1cmF0aW9uIiwgImRleG0udmVudC5kdXJhdGlvbiIpKQ0KDQprbml0cjo6a2FibGUodGJsLCBjYXB0aW9uID0gIk1lY2hhbmljYWwgVmVudGlsYXRpb24iKQ0KYGBgDQoNCioqTm90ZXMqKg0KDQoxLiB2ZW50LnRpbWVzID0gbnVtYmVyIG9mIHRpbWVzIHBhdGllbnQgd2FzIGludHViYXRlZA0KMi4gdmVudC5kdXJhdGlvbiA9IHRvdGFsIHRpbWUgb24gdmVudGlsYXRvciwgaW4gaG91cnMsIGZyb20gYWxsIGludHViYXRpb25zDQozLiBkZXhtLnZlbnQuZHVyYXRpb24gPSB0b3RhbCB0aW1lIG9uIHZlbnRpbGF0b3IgYW5kIG9uIGRleG1lZGV0b21pZGluZSwgaW4gaG91cnMNCg0KIyMgU2FmZXR5IE91dGNvbWVzDQoNCmBgYHtyIHJlc3VsdHM9J2FzaXMnfQ0KZCA8LSBkYXRhLnNhZmV0eSAlPiUNCiAgICBpbm5lcl9qb2luKGRhdGEuZGVtb2dyYXBoaWNzWywgYygicGllLmlkIiwgImdyb3VwIildLCBieSA9ICJwaWUuaWQiKSANCg0KdmFycyA8LSBjKCJoeXBvdGVuc2lvbiIsICJicmFkeWNhcmRpYSIsICJicC5jaGFuZ2UiLCAiaHIuY2hhbmdlIikNCmZ2YXJzIDwtIGMoImh5cG90ZW5zaW9uIiwgImJyYWR5Y2FyZGlhIikNCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSwgbm9ubm9ybWFsID0gYygiYnAuY2hhbmdlIiwgImhyLmNoYW5nZSIpKQ0KDQprbml0cjo6a2FibGUodGJsLCBjYXB0aW9uID0gIlNhZmV0eSIpDQpgYGANCg0KKipOb3RlcyoqDQoNCjEuIEh5cG90ZW5zaW9uIGRlZmluZWQgYXMgKm5ldyogb25zZXQgb2YgU0JQIDwgODAgbW1IZywgTUFQIDwgNjAsIG9yIHJlcXVpcmluZyB2YXNvcHJlc3NvciBpbml0aWF0aW9uDQoyLiBCcmFkeWNhcmRpYSBkZWZpbmVkIGFzICpuZXcqIG9uc2V0IG9mIEhSIDwgNTUgYnBtIG9yIGFkbWluaXN0cmF0aW9uIG9mIGF0cm9waW5lDQo=</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkRleG1lZGV0b21pZGluZSBNVUUgQW5hbHlzaXMiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpgYGB7ciBsaWJyYXJ5fQ0Kc291cmNlKCIwLWxpYnJhcnkuUiIpDQp0bXAgPC0gZ2V0X3JkcyhkaXIuc2F2ZSkNCmxpYnJhcnkodGFibGVvbmUpDQpgYGANCg0KKipOb3RlcyoqDQoNCjEuIERhdGEgd2VyZSBjYWxjdWxhdGVkIHVzaW5nIENoaS1TcXVhcmVkIGZvciBjYXRlZ29yaWNhbCBkYXRhIGFuZCB0LXRlc3Qgb3IgTWFubi1XaGl0bmV5IChub3RlZCBieSAibm9ubm9ybSIgaW4gdGhlICp0ZXN0KiBjb2x1bW4pIGZvciBjb250aW51b3VzIGRhdGEuDQoNCiMjIFBhdGllbnRzDQoNCiMjIyBEZW1vZ3JhcGhpY3MNCmBgYHtyIGRlbW9ncmFwaGljcywgcmVzdWx0cz0nYXNpcyd9DQpkIDwtIGRhdGEuZGVtb2dyYXBoaWNzICU+JQ0KICAgIG11dGF0ZShzZXggPSBmYWN0b3Ioc2V4LCBsZXZlbHMgPSBjKCJGZW1hbGUiLCAiTWFsZSIpKSwNCiAgICAgICAgICAgcmFjZSA9IGZhY3RvcihyYWNlLCBleGNsdWRlID0gYygiIiwgIlVua25vd24iKSksDQogICAgICAgICAgIGRpc3Bvc2l0aW9uID0gc3RyX3JlcGxhY2VfYWxsKGRpc3Bvc2l0aW9uLCByZWdleCgiLipleHBpcmVkLip8Lipob3NwaWNlLip8LipkZWNlYXNlZC4qIiwgaWdub3JlX2Nhc2UgPSBUUlVFKSwgIkRlY2Vhc2VkL0hvc3BpY2UiKSwNCiAgICAgICAgICAgZGlzcG9zaXRpb24gPSBzdHJfcmVwbGFjZV9hbGwoZGlzcG9zaXRpb24sIHJlZ2V4KCIuKmhvbWUuKnwuKmFnYWluc3QuKiIsIGlnbm9yZV9jYXNlID0gVFJVRSksICJIb21lIiksDQogICAgICAgICAgIGRpc3Bvc2l0aW9uID0gc3RyX3JlcGxhY2VfYWxsKGRpc3Bvc2l0aW9uLCByZWdleCgiLipkYy4qfC4qdHJhbnNmZXIuKnwuKmNhcmUuKnwuKnNraWxsLioiLCBpZ25vcmVfY2FzZSA9IFRSVUUpLCAiVHJhbnNmZXJyZWQiKSkNCg0KdmFycyA8LSBjKCJhZ2UiLCAic2V4IiwgInJhY2UiLCAibGVuZ3RoLnN0YXkiLCAiZGlzcG9zaXRpb24iKQ0KZnZhcnMgPC0gYygic2V4IiwgInJhY2UiLCAiZGlzcG9zaXRpb24iKQ0KDQp0YmwgPC0gQ3JlYXRlVGFibGVPbmUodmFycyA9IHZhcnMsIHN0cmF0YSA9ICJncm91cCIsIGRhdGEgPSBkLCBmYWN0b3JWYXJzID0gZnZhcnMpDQpwdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSwgbm9ubm9ybWFsID0gYygiYWdlIiwgImxlbmd0aC5zdGF5IikpDQoNCmtuaXRyOjprYWJsZShwdGJsLCBjYXB0aW9uID0gIkRlbW9ncmFwaGljcyIpDQpgYGANCg0KIyMjIFNPRkEgU2NvcmUNCg0KIyMjIFN1YnN0YW5jZSBBYnVzZQ0KDQpgYGB7ciBzdWJzdGFuY2UsIHJlc3VsdHM9J2FzaXMnfQ0KZCA8LSBkYXRhLnN1YmFidXNlICU+JQ0KICAgIGlubmVyX2pvaW4oZGF0YS5kZW1vZ3JhcGhpY3NbLCBjKCJwaWUuaWQiLCAiZ3JvdXAiKV0sIGJ5ID0gInBpZS5pZCIpIA0KDQp2YXJzIDwtIGMoImV0b2guYWJ1c2UiLCAiZXRvaC5oaWdoIiwgInN1Yi5hYnVzZSIsICJ1ZHMucG9zIikNCmZ2YXJzIDwtIHZhcnMNCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSkNCg0Ka25pdHI6OmthYmxlKHRibCwgY2FwdGlvbiA9ICJTdWJzdGFuY2UgQWJ1c2UiKQ0KYGBgDQoNCioqTm90ZXMqKg0KDQoxLiBldG9oLmFidXNlIGFuZCBzdWIuYWJ1c2UgYXJlIGJhc2VkIG9uIElDRC05LUNNIGNvZGVzIGZvciBFdE9IL3N1YnN0YW5jZSBhYnVzZS4NCjIuIGV0b2guaGlnaCA9IEV0T0ggbGV2ZWwgd2FzID4gMC4wOA0KMy4gdWRzLnBvcyA9IFVEUyB3YXMgcG9zaXRpdmUsIGV4Y2x1ZGluZyBiZW56b2RpYXplcGluZXMgYW5kIG9waWF0ZXMNCg0KIyMgRGV4bWVkZXRvbWlkaW5lIFRoZXJhcHkNCg0KIyMjIEluZGljYXRpb25zDQpgYGB7ciBpbmRpY2F0aW9ucywgcmVzdWx0cz0nYXNpcyd9DQpkIDwtIGRhdGEubWFudWFsICU+JQ0KICAgIGlubmVyX2pvaW4oZGF0YS5kZW1vZ3JhcGhpY3NbLCBjKCJwaWUuaWQiLCAiZ3JvdXAiKV0sIGJ5ID0gInBpZS5pZCIpICU+JQ0KICAgIG11dGF0ZShpY3UucmVhc29uID0gc3RyX3RyaW0oaWN1LnJlYXNvbiwgc2lkZSA9ICJib3RoIiksDQogICAgICAgICAgIGljdS5yZWFzb24gPSBzdHJfcmVwbGFjZV9hbGwoaWN1LnJlYXNvbiwgInNydWciLCAic3VyZyIpKSANCg0KdmFycyA8LSBjKCJpY3UucmVhc29uIiwgImRleG1lZC5pbmRpY2F0aW9uIikNCmZ2YXJzIDwtIHZhcnMNCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSwgY3JhbVZhcnMgPSAiaWN1LnJlYXNvbiIpDQoNCmtuaXRyOjprYWJsZSh0YmwsIGNhcHRpb24gPSAiSW5kaWNhdGlvbnMiKQ0KYGBgDQoNCiMjIyBEZXhtZWRldG9taWRpbmUgSW5mdXNpb24NCg0KYGBge3IgZGV4bWVkLCByZXN1bHRzPSdhc2lzJ30NCmQgPC0gZGF0YS5tZWRzLmNvbnQuc3VtICU+JQ0KICAgIGZpbHRlcihtZWQgPT0gImRleG1lZGV0b21pZGluZSIpICU+JQ0KICAgIGlubmVyX2pvaW4oZGF0YS5kZW1vZ3JhcGhpY3NbLCBjKCJwaWUuaWQiLCAiZ3JvdXAiKV0sIGJ5ID0gInBpZS5pZCIpIA0KDQp2YXJzIDwtIG5hbWVzKGRbLCAtYygxLCAyLCA5KV0pDQpmdmFycyA8LSAibnVtLmluZnVzaW9ucyINCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KcHRibCA8LSBwcmludCh0YmwsIHByaW50VG9nZ2xlID0gRkFMU0UsIG5vbm5vcm1hbCA9IHZhcnNbLTFdKQ0KDQprbml0cjo6a2FibGUocHRibCwgY2FwdGlvbiA9ICJEZXhtZWRldG9taWRpbmUgSW5mdXNpb24iKQ0KYGBgDQoNCioqTm90ZXMqKg0KDQoxLiBudW0uaW5mdXNpb25zID0gbnVtYmVyIG9mIGluZGVwZW5kZW50IGRleG1lZGV0b21pZGluZSBpbmZ1c2lvbnM7IGEgbmV3IGluZnVzaW9uIHdhcyBkZWZpbmVkIGFzID4gMTIgaG91cnMgb2ZmIGRleG1lZGV0b21pZGluZQ0KMi4gY3VtLmRvc2UgPSBjdW11bGF0aXZlIGRleG1lZGV0b21pZGluZSBkb3NlIHJlY2VpdmVkIGZyb20gYWxsIGluZnVzaW9ucywgaW4gbWljcm9ncmFtcyAvIGtnDQozLiBjdW0uZHVyYXRpb24gPSB0b3RhbCBhbW91bnQgb2YgdGltZSwgaW4gaG91cnMsIGZyb20gc3RhcnQgdG8gZmluaXNoIGZvciBhbGwgaW5mdXNpb25zOyB0aGlzIGluY2x1ZGVzIHRpbWUgd2hlcmUgdGhlIGRyaXAgbWF5IGhhdmUgYmVlbiBvZmYgZm9yIGEgc2hvcnQgcGVyaW9kIG9mIHRpbWUNCjQuIGN1bS5ydW4udGltZSA9IHRvdGFsIGFtb3VudCBvZiB0aW1lLCBpbiBob3Vycywgd2hlcmUgdGhlIGRleG1lZGV0b21pZGluZSBpbmZ1c2lvbiB3YXMgYWN0dWFsbHkgcnVubmluZw0KNS4gdGltZS53dC5hdmcgPSBkZXhtZWRldG9taWRpbmUgaW5mdXNpb24gcmF0ZSBhY3Jvc3MgYWxsIGluZnVzaW9ucywgaW4gbWljcm9ncmFtL2tnL2hvdXINCjYuIG1heC5yYXRlID0gbWF4aW11bSBkZXhtZWRldG9taWRpbmUgaW5mdXNpb24gcmF0ZSwgaW4gbWljcm9ncmFtL2tnL2hvdXINCg0KIyMjIENvbmN1cnJlbnQgVXNlIG9mIENvbnRpbnVvdXMgU2VkYXRpdmVzIC8gQW5hbGdlc2ljcw0KDQpgYGB7ciBzZWRhdGl2c2UsIHJlc3VsdHM9J2FzaXMnfQ0KZCA8LSBkYXRhLnNlZGF0aXZlcyAlPiUNCiAgICBpbm5lcl9qb2luKGRhdGEuZGVtb2dyYXBoaWNzWywgYygicGllLmlkIiwgImdyb3VwIildLCBieSA9ICJwaWUuaWQiKSANCg0KdmFycyA8LSBuYW1lcyhkWywgLWMoMSwgOSldKQ0KZnZhcnMgPC0gdmFycw0KDQp0YmwgPC0gQ3JlYXRlVGFibGVPbmUodmFycyA9IHZhcnMsIHN0cmF0YSA9ICJncm91cCIsIGRhdGEgPSBkLCBmYWN0b3JWYXJzID0gZnZhcnMpDQp0YmwgPC0gcHJpbnQodGJsLCBwcmludFRvZ2dsZSA9IEZBTFNFKQ0KDQprbml0cjo6a2FibGUodGJsLCBjYXB0aW9uID0gIkNvbmN1cnJlbnQgU2VkYXRpdmVzIikNCmBgYA0KDQoqKk5vdGVzKioNCg0KMS4gVGhlcmUgd2VyZSBubyBwYXRpZW50cyB3aG8gcmVjZWl2ZWQgY29udGludW91cyBtb3JwaGluZQ0KDQojIyBNZWNoYW5pY2FsIFZlbnRpbGF0aW9uDQoNCmBgYHtyIHZlbnQsIHJlc3VsdHM9J2FzaXMnfQ0KZCA8LSBkYXRhLnZlbnQgJT4lDQogICAgaW5uZXJfam9pbihkYXRhLmRlbW9ncmFwaGljc1ssIGMoInBpZS5pZCIsICJncm91cCIpXSwgYnkgPSAicGllLmlkIikgJT4lDQogICAgbXV0YXRlKHZlbnQudGltZXMgPSBhcy5jaGFyYWN0ZXIodmVudC5udW0pLA0KICAgICAgICAgICB2ZW50LnRpbWVzID0gaWZlbHNlKHZlbnQubnVtID49IDMsICI+Lz0gMyIsIHZlbnQudGltZXMpLA0KICAgICAgICAgICB2ZW50LnRpbWVzID0gb3JkZXJlZCh2ZW50LnRpbWVzLCBsZXZlbHMgPSBjKCIxIiwgIjIiLCAiPi89IDMiKSkpDQoNCnZhcnMgPC0gYygidmVudCIsICJ2ZW50LnRpbWVzIiwgInZlbnQuZHVyYXRpb24iLCAiZGV4bS52ZW50LmR1cmF0aW9uIikNCmZ2YXJzIDwtIGMoInZlbnQiLCAidmVudC50aW1lcyIpDQoNCnRibCA8LSBDcmVhdGVUYWJsZU9uZSh2YXJzID0gdmFycywgc3RyYXRhID0gImdyb3VwIiwgZGF0YSA9IGQsIGZhY3RvclZhcnMgPSBmdmFycykNCnRibCA8LSBwcmludCh0YmwsIHByaW50VG9nZ2xlID0gRkFMU0UsIG5vbm5vcm1hbCA9IGMoInZlbnQuZHVyYXRpb24iLCAiZGV4bS52ZW50LmR1cmF0aW9uIikpDQoNCmtuaXRyOjprYWJsZSh0YmwsIGNhcHRpb24gPSAiTWVjaGFuaWNhbCBWZW50aWxhdGlvbiIpDQpgYGANCg0KKipOb3RlcyoqDQoNCjEuIHZlbnQudGltZXMgPSBudW1iZXIgb2YgdGltZXMgcGF0aWVudCB3YXMgaW50dWJhdGVkDQoyLiB2ZW50LmR1cmF0aW9uID0gdG90YWwgdGltZSBvbiB2ZW50aWxhdG9yLCBpbiBob3VycywgZnJvbSBhbGwgaW50dWJhdGlvbnMNCjMuIGRleG0udmVudC5kdXJhdGlvbiA9IHRvdGFsIHRpbWUgb24gdmVudGlsYXRvciBhbmQgb24gZGV4bWVkZXRvbWlkaW5lLCBpbiBob3Vycw0KDQojIyMgUkFTUw0KDQpgYGB7ciByYXNzLCByZXN1bHRzPSdhc2lzJ30NCmQgPC0gZGF0YS5yYXNzICU+JQ0KICAgIGlubmVyX2pvaW4oZGF0YS5kZW1vZ3JhcGhpY3NbLCBjKCJwaWUuaWQiLCAiZ3JvdXAiKV0sIGJ5ID0gInBpZS5pZCIpIA0KDQp2YXJzIDwtIG5hbWVzKGRhdGEucmFzcylbLTFdDQoNCnRibCA8LSBDcmVhdGVUYWJsZU9uZSh2YXJzID0gdmFycywgc3RyYXRhID0gImdyb3VwIiwgZGF0YSA9IGQpDQpwdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSkNCg0Ka25pdHI6OmthYmxlKHB0YmwsIGNhcHRpb24gPSAiUkFTUyIpDQpgYGANCg0KKipOb3RlcyoqDQoNCjEuIERhdGEgcmVwcmVzZW50cyB0aGUgcGVyY2VudCBvZiB0aW1lIHRoZSBSQVNTIHNjb3JlIHdhcyBhdCBnb2FsIChSQVNTIG9mIC0xIG9yIC0yKSwgYWJvdmUgZ29hbCAoUkFTUyAtMyB0byAtNSksIG9yIGJlbG93IGdvYWwgKFJBU1Mgb2YgMCB0byA0KSBpbiB0aGUgMjQtaG91cnMgcHJpb3IgdG8gZGV4bWVkZXRvbWlkaW5lIGluaXRpYXRpb24gKHByZSksIGR1cmluZyBkZXhtZWRldG9taWRpbmUsIG9yIGluIHRoZSAyNC1ob3VycyBhZnRlciBkZXhtZWRldG9taWRpbmUgKHBvc3QpDQoNCiMjIFNhZmV0eSBPdXRjb21lcw0KDQpgYGB7ciBzYWZldHksIHJlc3VsdHM9J2FzaXMnfQ0KZCA8LSBkYXRhLnNhZmV0eSAlPiUNCiAgICBpbm5lcl9qb2luKGRhdGEuZGVtb2dyYXBoaWNzWywgYygicGllLmlkIiwgImdyb3VwIildLCBieSA9ICJwaWUuaWQiKSANCg0KdmFycyA8LSBjKCJoeXBvdGVuc2lvbiIsICJicmFkeWNhcmRpYSIsICJicC5jaGFuZ2UiLCAiaHIuY2hhbmdlIikNCmZ2YXJzIDwtIGMoImh5cG90ZW5zaW9uIiwgImJyYWR5Y2FyZGlhIikNCg0KdGJsIDwtIENyZWF0ZVRhYmxlT25lKHZhcnMgPSB2YXJzLCBzdHJhdGEgPSAiZ3JvdXAiLCBkYXRhID0gZCwgZmFjdG9yVmFycyA9IGZ2YXJzKQ0KdGJsIDwtIHByaW50KHRibCwgcHJpbnRUb2dnbGUgPSBGQUxTRSwgbm9ubm9ybWFsID0gYygiYnAuY2hhbmdlIiwgImhyLmNoYW5nZSIpKQ0KDQprbml0cjo6a2FibGUodGJsLCBjYXB0aW9uID0gIlNhZmV0eSIpDQpgYGANCg0KKipOb3RlcyoqDQoNCjEuIEh5cG90ZW5zaW9uIGRlZmluZWQgYXMgKm5ldyogb25zZXQgb2YgU0JQIDwgODAgbW1IZywgTUFQIDwgNjAsIG9yIHJlcXVpcmluZyB2YXNvcHJlc3NvciBpbml0aWF0aW9uDQoyLiBCcmFkeWNhcmRpYSBkZWZpbmVkIGFzICpuZXcqIG9uc2V0IG9mIEhSIDwgNTUgYnBtIG9yIGFkbWluaXN0cmF0aW9uIG9mIGF0cm9waW5lDQo=</div>
 
 
 

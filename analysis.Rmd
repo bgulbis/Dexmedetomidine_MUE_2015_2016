@@ -3,7 +3,7 @@ title: "Dexmedetomidine MUE Analysis"
 output: html_notebook
 ---
 
-```{r}
+```{r library}
 source("0-library.R")
 tmp <- get_rds(dir.save)
 library(tableone)
@@ -16,7 +16,7 @@ library(tableone)
 ## Patients
 
 ### Demographics
-```{r results='asis'}
+```{r demographics, results='asis'}
 d <- data.demographics %>%
     mutate(sex = factor(sex, levels = c("Female", "Male")),
            race = factor(race, exclude = c("", "Unknown")),
@@ -37,7 +37,7 @@ knitr::kable(ptbl, caption = "Demographics")
 
 ### Substance Abuse
 
-```{r results='asis'}
+```{r substance, results='asis'}
 d <- data.subabuse %>%
     inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
 
@@ -59,7 +59,7 @@ knitr::kable(tbl, caption = "Substance Abuse")
 ## Dexmedetomidine Therapy
 
 ### Indications
-```{r results='asis'}
+```{r indications, results='asis'}
 d <- data.manual %>%
     inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") %>%
     mutate(icu.reason = str_trim(icu.reason, side = "both"),
@@ -76,7 +76,7 @@ knitr::kable(tbl, caption = "Indications")
 
 ### Dexmedetomidine Infusion
 
-```{r results='asis'}
+```{r dexmed, results='asis'}
 d <- data.meds.cont.sum %>%
     filter(med == "dexmedetomidine") %>%
     inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
@@ -101,7 +101,7 @@ knitr::kable(ptbl, caption = "Dexmedetomidine Infusion")
 
 ### Concurrent Use of Continuous Sedatives / Analgesics
 
-```{r results='asis'}
+```{r sedativse, results='asis'}
 d <- data.sedatives %>%
     inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
 
@@ -120,7 +120,7 @@ knitr::kable(tbl, caption = "Concurrent Sedatives")
 
 ## Mechanical Ventilation
 
-```{r results='asis'}
+```{r vent, results='asis'}
 d <- data.vent %>%
     inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") %>%
     mutate(vent.times = as.character(vent.num),
@@ -142,9 +142,27 @@ knitr::kable(tbl, caption = "Mechanical Ventilation")
 2. vent.duration = total time on ventilator, in hours, from all intubations
 3. dexm.vent.duration = total time on ventilator and on dexmedetomidine, in hours
 
+### RASS
+
+```{r rass, results='asis'}
+d <- data.rass %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- names(data.rass)[-1]
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d)
+ptbl <- print(tbl, printToggle = FALSE)
+
+knitr::kable(ptbl, caption = "RASS")
+```
+
+**Notes**
+
+1. Data represents the percent of time the RASS score was at goal (RASS of -1 or -2), above goal (RASS -3 to -5), or below goal (RASS of 0 to 4) in the 24-hours prior to dexmedetomidine initiation (pre), during dexmedetomidine, or in the 24-hours after dexmedetomidine (post)
+
 ## Safety Outcomes
 
-```{r results='asis'}
+```{r safety, results='asis'}
 d <- data.safety %>%
     inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
 

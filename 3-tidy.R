@@ -382,39 +382,66 @@ data.sofa <- select(data.demographics, pie.id) %>%
 
 # RASS -------------------------------------------------
 
+rass.mode <- function(df) {
+    x <- group_by(df, pie.id, lab.result) %>%
+        summarize(n = n()) %>%
+        group_by(pie.id) %>%
+        arrange(desc(n)) %>%
+        summarize(mode = first(lab.result))    
+    x
+}
+
 tmp.rass <- raw.icu.assess %>%
     semi_join(data.demographics, by = "pie.id") %>%
     filter(assessment == "rass score") %>%
-    mutate(assess.result = as.numeric(assess.result)) %>%
+    mutate(lab.result = as.numeric(assess.result)) %>%
+    rename(lab.datetime = assess.datetime,
+           lab = assessment) %>%
     inner_join(data.dexmed.start[c("pie.id", "start.datetime", "stop.datetime")], 
                by = "pie.id") 
 
-tmp.rass.during <- tmp.rass %>%
-    filter(assess.datetime >= start.datetime,
-           assess.datetime <= stop.datetime) %>%
-    rename(lab.datetime = assess.datetime) %>%
-    group_by(pie.id) %>%
-    arrange(lab.datetime) %>%
-    mutate(lab.start = first(lab.datetime)) %>%
-    calc_lab_runtime
+goal <- list(~lab.result >= -2, ~lab.result <= -1)
+agitated <- list(~lab.result > -1)
+asleep <- list(~lab.result < -2)
 
-tmp.rass.pre <- tmp.rass %>%
-    filter(assess.datetime < start.datetime) %>%
-    rename(lab.datetime = assess.datetime) %>%
+tmp.rass.during <- tmp.rass %>%
+    filter(lab.datetime >= start.datetime,
+           lab.datetime <= stop.datetime) %>%
     group_by(pie.id) %>%
     arrange(lab.datetime) %>%
     mutate(lab.start = first(lab.datetime)) %>%
-    calc_lab_runtime
+    calc_lab_runtime %>%
+    do(data_frame(perc.time.goal = calc_perc_time(., goal, meds = FALSE)$perc.time,
+                  perc.time.above = calc_perc_time(., agitated, meds = FALSE)$perc.time,
+                  perc.time.below = calc_perc_time(., asleep, meds = FALSE)$perc.time))
+    
+tmp.rass.pre <- tmp.rass %>%
+    filter(lab.datetime < start.datetime,
+           lab.datetime >= start.datetime - days(1)) %>%
+    group_by(pie.id) %>%
+    arrange(lab.datetime) %>%
+    mutate(lab.start = first(lab.datetime)) %>%
+    calc_lab_runtime %>%
+    do(data_frame(perc.time.goal.pre = calc_perc_time(., goal, meds = FALSE)$perc.time,
+                  perc.time.above.pre = calc_perc_time(., agitated, meds = FALSE)$perc.time,
+                  perc.time.below.pre = calc_perc_time(., asleep, meds = FALSE)$perc.time))
 
 tmp.rass.post <- tmp.rass %>%
-    filter(assess.datetime > stop.datetime) %>%
-    rename(lab.datetime = assess.datetime) %>%
+    filter(lab.datetime < start.datetime,
+           lab.datetime >= start.datetime - days(1)) %>%
     group_by(pie.id) %>%
     arrange(lab.datetime) %>%
     mutate(lab.start = first(lab.datetime)) %>%
-    calc_lab_runtime
+    calc_lab_runtime %>%
+    do(data_frame(perc.time.goal.post = calc_perc_time(., goal, meds = FALSE)$perc.time,
+                  perc.time.above.post = calc_perc_time(., agitated, meds = FALSE)$perc.time,
+                  perc.time.below.post = calc_perc_time(., asleep, meds = FALSE)$perc.time))
 
-# substance abuse --------------------------------------
+
+data.rass <- full_join(tmp.rass.pre, tmp.rass.during, by = "pie.id") %>%
+    full_join(tmp.rass.post, by = "pie.id")
+
+ # substance abuse --------------------------------------
 
 tmp.uds <- read_edw_data(dir.data, "uds", "labs") %>%
     semi_join(data.demographics, by = "pie.id") %>%
