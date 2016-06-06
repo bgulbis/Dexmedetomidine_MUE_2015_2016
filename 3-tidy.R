@@ -380,16 +380,12 @@ data.sofa <- select(data.demographics, pie.id) %>%
     left_join(tmp.sofa.gcs, by = "pie.id") %>%
     left_join(tmp.sofa.uop, by = "pie.id")
 
-# RASS -------------------------------------------------
-
-rass.mode <- function(df) {
-    x <- group_by(df, pie.id, lab.result) %>%
-        summarize(n = n()) %>%
-        group_by(pie.id) %>%
-        arrange(desc(n)) %>%
-        summarize(mode = first(lab.result))    
-    x
+calc_sofa <- function(df) {
+    
 }
+
+
+# RASS -------------------------------------------------
 
 tmp.rass <- raw.icu.assess %>%
     semi_join(data.demographics, by = "pie.id") %>%
