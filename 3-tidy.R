@@ -316,6 +316,8 @@ tmp.sofa.map <- raw.vitals %>%
 sofa.vasop <- c("dopamine", "dobutamine", "norepinephrine")
 sofa.vasop <- data_frame(name = sofa.vasop, type = "med", group = "cont")
 
+# make sure norepi is weight based
+
 tmp.sofa.vasop <- raw.meds.cont %>%
     semi_join(data.demographics, by = "pie.id") %>%
     tidy_data("meds_cont", ref.data = sofa.vasop, sched.data = raw.meds.sched) %>%
@@ -381,8 +383,124 @@ data.sofa <- select(data.demographics, pie.id) %>%
     left_join(tmp.sofa.uop, by = "pie.id")
 
 calc_sofa <- function(df) {
+    # calculate respiratory component
+    if (is.na(df$pao2.fio2) & is.na(df$spo2.fio2)) {
+        resp <- 0
+    } else if (!is.na(df$pao2.fio2)) {
+        if (df$pao2.fio2 < 100) {
+            resp <- 4
+        } else if (df$pao2.fio2 < 200) {
+            resp <- 3
+        } else if (df$pao2.fio2 < 300) {
+            resp <- 2
+        } else if (df$pao2.fio2 < 400) {
+            resp <- 1
+        } else {
+            resp <- 0
+        }
+    } else {
+        if (df$spo2.fio2 < 67) {
+            resp <- 4
+        } else if (df$spo2.fio2 < 142) {
+            resp <- 3
+        } else if (df$spo2.fio2 < 221) {
+            resp <- 2
+        } else if (df$spo2.fio2 < 302) {
+            resp <- 1
+        } else {
+            resp <- 0
+        }
+    }
     
+    # calculate coagulation component
+    if (is.na(df$platelet)) {
+        coag <- 0
+    } else if (df$platelet < 20) {
+        coag <- 4
+    } else if (df$platelet < 50) {
+        coag <- 3
+    } else if (df$platelet < 100) {
+        coag <- 2
+    } else if (df$platelet < 150) {
+        coag <- 1
+    } else {
+        coag <- 0
+    }
+    
+    # calculate liver component
+    if (is.na(df$bili.total)) {
+        liver <- 0
+    } else if (df$bili.total >= 12) {
+        liver <- 4
+    } else if (df$bili.total >= 6) {
+        liver <- 3
+    } else if (df$bili.total >= 2) {
+        liver <- 2
+    } else if (df$bili.total >= 1.2) {
+        liver <- 1
+    } else {
+        liver <- 0
+    }
+    
+    df$dopamine[is.na(df$dopamine)] <- 0
+    df$dobutamine[is.na(df$dobutamine)] <- 0
+    df$norepinephrine[is.na(df$norepinephrine)] <- 0
+    
+    # cacluate cardiovascular component
+    if (df$dopamine > 15 | df$norepinephrine > 0.1) {
+        cards <- 4
+    } else if (df$dopamine > 5 | df$norepinephrine <= 0.1) {
+        cards <- 3
+    } else if (df$dopamine <= 5 | !is.na(df$dobutamine)) {
+        cards <- 2
+    } else if (is.na(df$map)) {
+        cards <- 0
+    } else if (df$map < 70) {
+        cards <- 1
+    } else {
+        cards <- 0
+    }
+    
+    # cns
+    if (is.na(df$gcs)) {
+        cns <- 0
+    } else if (df$gcs < 6) {
+        cns <- 4
+    } else if (df$gcs < 9) {
+        cns <- 3
+    } else if (df$gcs < 12) {
+        cns <- 2
+    } else if (df$gcs < 14) {
+        cns <- 1
+    } else {
+        cns <- 0
+    }
+
+    df$creatinine[is.na(df$creatinine)] <- 0
+    df$uop[is.na(df$uop)] <- 10000
+    
+    # renal
+    if (df$creatinine > 5 | df$uop < 200) {
+        renal <- 4
+    } else if (df$creatinine >= 3.5 | df$uop < 500) {
+        renal <- 3
+    } else if (df$creatinine >= 2) {
+        renal <- 2
+    } else if (df$creatinine >= 1.2) {
+        renal <- 1
+    } else {
+        renal <- 0
+    }
+    
+    resp + coag + liver + cards + cns + renal
 }
+    
+    
+tmp.score <- data.sofa %>%
+    mutate(pao2.fio2 = pao2 / (fio2 / 100),
+           spo2.fio2 = spo2 / (fio2 / 100)) %>%
+    group_by(pie.id) %>%
+    do(sofa = calc_sofa(.))
 
 
 # RASS -------------------------------------------------
