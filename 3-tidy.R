@@ -261,12 +261,22 @@ data.safety.bp$vasopressor[is.na(data.safety.bp$vasopressor)] <- FALSE
 data.safety.bp$hypotension[is.na(data.safety.bp$hypotension)] <- FALSE
 
 # create combined safety table
+tmp.safety.bp <- data.safety.bp %>%
+    group_by(pie.id) %>%
+    summarize(bp.change = min(bp.change.mean))
+
+tmp.safety.hr <- data.safety.hr %>%
+    group_by(pie.id) %>%
+    summarize(hr.change = min(hr.change.mean))
+
 data.safety <- full_join(data.safety.bp, data.safety.hr, by = "pie.id") %>%
     group_by(pie.id) %>%
     summarize(hypotension = sum(hypotension),
               bradycardia = sum(bradycardia)) %>%
     mutate(hypotension = hypotension >= 1,
-           bradycardia = bradycardia >= 1)
+           bradycardia = bradycardia >= 1) %>%
+    inner_join(tmp.safety.bp, by = "pie.id") %>%
+    inner_join(tmp.safety.hr, by = "pie.id")
 
 # SOFA score -------------------------------------------
 
