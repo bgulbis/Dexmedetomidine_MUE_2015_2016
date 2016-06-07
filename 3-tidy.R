@@ -621,6 +621,22 @@ data.subabuse <- read_edw_data(dir.data, "icd9") %>%
 data.subabuse$etoh.high[is.na(data.subabuse$etoh.high)] <- FALSE
 data.subabuse$uds.pos[is.na(data.subabuse$uds.pos)] <- FALSE
 
+# cost -------------------------------------------------
+
+raw.charges <- read_data(dir.data, "charges", base = TRUE) %>%
+    transmute(pie.id = PowerInsight.Encounter.Id,
+              type = Transaction.Type,
+              hospital = Pavillion.Desc,
+              cdm = Cdm.Code,
+              charge.date = ymd_hms(Service.Date),
+              quantity = as.numeric(Charge.Quantity),
+              charge.amount = as.numeric(Charge.Amount)) %>%
+    semi_join(data.demographics, by = "pie.id") %>%
+    filter(cdm %in% c("66002032", "66002077", "66176116")) %>%
+    group_by(pie.id, cdm) %>%
+    summarize(quantity = sum(quantity),
+              charge.amount = sum(charge.amount))
+
 # finish -----------------------------------------------
 concat_encounters(data.demographics$pie.id)
     
