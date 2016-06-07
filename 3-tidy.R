@@ -313,7 +313,7 @@ tmp.sofa.map <- raw.vitals %>%
            vital.datetime < arrive.datetime + days(1)) %>%
     summarize(map = min(vital.result)) 
 
-sofa.vasop <- c("dopamine", "dobutamine", "norepinephrine")
+sofa.vasop <- c("dopamine", "dobutamine", "norepinephrine", "epinephrine")
 sofa.vasop <- data_frame(name = sofa.vasop, type = "med", group = "cont")
 
 # make sure norepi is weight based
@@ -321,6 +321,18 @@ sofa.vasop <- data_frame(name = sofa.vasop, type = "med", group = "cont")
 tmp.sofa.vasop <- raw.meds.cont %>%
     semi_join(data.demographics, by = "pie.id") %>%
     tidy_data("meds_cont", ref.data = sofa.vasop, sched.data = raw.meds.sched) %>%
+    left_join(data.measures[c("pie.id", "weight")], by = "pie.id") %>%
+    mutate(rate = ifelse(med.rate.units %in% c("microgram/min", "microgram/hr"), 
+                         med.rate / weight, med.rate),
+           rate = ifelse(med.rate.units == "microgram/hr" & med.rate > 200, 
+                         med.rate / 60 / weight, rate),
+           rate = ifelse(med %in% c("norepinephrine", "epinephrine") & 
+                             med.rate.units == "microgram/kg/min" &
+                             med.rate > 2, med.rate / weight, rate),
+           rate = ifelse(med %in% c("norepinephrine", "epinephrine") & 
+                             med.rate.units == "microgram/kg/hr" &
+                             med.rate >= 1, med.rate / 60, rate),
+           med.rate = rate) %>%
     calc_runtime %>%
     group_by(pie.id, med) %>%
     arrange(rate.start) %>%
@@ -329,7 +341,7 @@ tmp.sofa.vasop <- raw.meds.cont %>%
            rate.start < arrive.datetime + days(1)) %>%
     summarize(med.rate = max(med.rate)) %>%
     mutate(med = factor(med, levels = sofa.vasop$name)) %>%
-    spread(med, med.rate, drop = FALSE)
+    spread(med, med.rate, fill = 0, drop = FALSE)
 
 tmp.sofa.gcs <- raw.icu.assess %>%
     semi_join(data.demographics, by = "pie.id") %>%
@@ -362,6 +374,14 @@ tmp.sofa.resp <- raw.vent.settings %>%
     select(-max, -min) %>%
     spread(vent.event, vent.result) 
 
+tmp.sofa.vent <- tmp.vent.times %>%
+    inner_join(data.dexmed.first[c("pie.id", "arrive.datetime")], by = "pie.id") %>%
+    mutate(vent = int_overlaps(interval(arrive.datetime, arrive.datetime + days(1)),
+                                  interval(vent.start, vent.stop))) %>%
+    filter(vent == TRUE) %>%
+    select(pie.id, vent) %>%
+    distinct
+    
 tmp.sofa.uop <- raw.uop %>%
     semi_join(data.demographics, by = "pie.id") %>%
     filter(uop.event != "urine count") %>%
@@ -376,6 +396,7 @@ tmp.sofa.uop <- raw.uop %>%
     
 data.sofa <- select(data.demographics, pie.id) %>%
     left_join(tmp.sofa.resp, by = "pie.id") %>%
+    left_join(tmp.sofa.vent, by = "pie.id") %>%
     left_join(tmp.sofa.labs, by = "pie.id") %>%
     left_join(tmp.sofa.map, by = "pie.id") %>%
     left_join(tmp.sofa.vasop, by = "pie.id") %>%
@@ -383,15 +404,17 @@ data.sofa <- select(data.demographics, pie.id) %>%
     left_join(tmp.sofa.uop, by = "pie.id")
 
 calc_sofa <- function(df) {
+
+    df$spo2.fio2[is.na(df$spo2.fio2)] <- 500
+    df$vent[is.na(df$vent)] <- FALSE
+    
     # calculate respiratory component
-    if (is.na(df$pao2.fio2) & is.na(df$spo2.fio2)) {
-        resp <- 0
-    } else if (!is.na(df$pao2.fio2)) {
+    if (!is.na(df$pao2.fio2)) {
         if (df$pao2.fio2 < 100) {
             resp <- 4
-        } else if (df$pao2.fio2 < 200) {
+        } else if (df$pao2.fio2 < 200 & df$vent == TRUE) {
             resp <- 3
-        } else if (df$pao2.fio2 < 300) {
+        } else if (df$pao2.fio2 < 300 & df$vent == TRUE) {
             resp <- 2
         } else if (df$pao2.fio2 < 400) {
             resp <- 1
@@ -399,9 +422,9 @@ calc_sofa <- function(df) {
             resp <- 0
         }
     } else {
-        if (df$spo2.fio2 < 67) {
+        if (df$spo2.fio2 < 67 & df$vent == TRUE) {
             resp <- 4
-        } else if (df$spo2.fio2 < 142) {
+        } else if (df$spo2.fio2 < 142 & df$vent == TRUE) {
             resp <- 3
         } else if (df$spo2.fio2 < 221) {
             resp <- 2
@@ -412,10 +435,10 @@ calc_sofa <- function(df) {
         }
     }
     
+    df$platelet[is.na(df$platelet)] <- 200
+
     # calculate coagulation component
-    if (is.na(df$platelet)) {
-        coag <- 0
-    } else if (df$platelet < 20) {
+    if (df$platelet < 20) {
         coag <- 4
     } else if (df$platelet < 50) {
         coag <- 3
@@ -426,11 +449,11 @@ calc_sofa <- function(df) {
     } else {
         coag <- 0
     }
+
+    df$bili.total[is.na(df$bili.total)] <- 0
     
     # calculate liver component
-    if (is.na(df$bili.total)) {
-        liver <- 0
-    } else if (df$bili.total >= 12) {
+    if (df$bili.total >= 12) {
         liver <- 4
     } else if (df$bili.total >= 6) {
         liver <- 3
@@ -445,26 +468,28 @@ calc_sofa <- function(df) {
     df$dopamine[is.na(df$dopamine)] <- 0
     df$dobutamine[is.na(df$dobutamine)] <- 0
     df$norepinephrine[is.na(df$norepinephrine)] <- 0
+    df$epinephrine[is.na(df$epinephrine)] <- 0
+    df$map[is.na(df$map)] <- 100
     
     # cacluate cardiovascular component
-    if (df$dopamine > 15 | df$norepinephrine > 0.1) {
+    if (df$dopamine > 15 | df$norepinephrine > 0.1 | df$epinephrine > 0.1) {
         cards <- 4
-    } else if (df$dopamine > 5 | df$norepinephrine <= 0.1) {
+    } else if (df$dopamine > 5 | 
+               (df$norepinephrine > 0 & df$norepinephrine <= 0.1) | 
+               (df$epinephrine > 0 & df$epinephrine <= 0.1)) {
         cards <- 3
-    } else if (df$dopamine <= 5 | !is.na(df$dobutamine)) {
+    } else if ((df$dopamine > 0 & df$dopamine <= 5) | df$dobutamine > 0) {
         cards <- 2
-    } else if (is.na(df$map)) {
-        cards <- 0
     } else if (df$map < 70) {
         cards <- 1
     } else {
         cards <- 0
     }
+
+    df$gcs[is.na(df$gcs)] <- 20
     
     # cns
-    if (is.na(df$gcs)) {
-        cns <- 0
-    } else if (df$gcs < 6) {
+    if (df$gcs < 6) {
         cns <- 4
     } else if (df$gcs < 9) {
         cns <- 3
@@ -492,16 +517,25 @@ calc_sofa <- function(df) {
         renal <- 0
     }
     
-    resp + coag + liver + cards + cns + renal
+    list(resp = resp, coag = coag, liver = liver, cards = cards, 
+         cns = cns, renal = renal)
 }
-    
-    
+
 tmp.score <- data.sofa %>%
     mutate(pao2.fio2 = pao2 / (fio2 / 100),
            spo2.fio2 = spo2 / (fio2 / 100)) %>%
     group_by(pie.id) %>%
     do(sofa = calc_sofa(.))
 
+library(tibble)
+tmp.sofa.tbl <- as_data_frame(t(
+    matrix(unlist(tmp.score$sofa), nrow = length(unlist(tmp.score$sofa[1])))
+))
+
+names(tmp.sofa.tbl) <- c("resp", "coag", "liver", "cards", "cns", "renal")
+
+data.sofa.score <- bind_cols(data.sofa["pie.id"], tmp.sofa.tbl) %>%
+    mutate(sofa = resp + coag + liver + cards + cns + renal)
 
 # RASS -------------------------------------------------
 
