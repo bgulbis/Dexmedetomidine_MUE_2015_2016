@@ -626,16 +626,56 @@ data.subabuse$uds.pos[is.na(data.subabuse$uds.pos)] <- FALSE
 raw.charges <- read_data(dir.data, "charges", base = TRUE) %>%
     transmute(pie.id = PowerInsight.Encounter.Id,
               type = Transaction.Type,
-              hospital = Pavillion.Desc,
-              cdm = Cdm.Code,
+              institution = Pavillion.Desc,
+              cdm.code = Cdm.Code,
               charge.date = ymd_hms(Service.Date),
               quantity = as.numeric(Charge.Quantity),
               charge.amount = as.numeric(Charge.Amount)) %>%
     semi_join(data.demographics, by = "pie.id") %>%
-    filter(cdm %in% c("66002032", "66002077", "66176116")) %>%
-    group_by(pie.id, cdm) %>%
+    filter(cdm.code %in% c("66002032", "66002077", "66176116")) %>%
+    group_by(pie.id, cdm.code) %>%
     summarize(quantity = sum(quantity),
               charge.amount = sum(charge.amount))
+
+raw.cost <- read_edw_data(dir.data, "cost") %>%
+    group_by(cdm.code, yearmo) %>%
+    summarize(tmc.cost = max(tmc.cost),
+              community.cost = max(community.cost))
+
+tmp.duration <- data.meds.cont.sum %>%
+    filter(med == "dexmedetomidine") %>%
+    inner_join(data.demographics[c("pie.id", "group")], by = "pie.id") %>%
+    group_by(group) %>%
+    summarize(pt.days.dexmed = sum(cum.duration) / 24 * n())    
+
+tmp.days <- data.demographics %>%
+    group_by(group) %>%
+    summarize(pt.days.hosp = sum(length.stay) *  n())
+
+data.cost <- raw.charges %>%
+    inner_join(data.dexmed.first[c("pie.id", "start.datetime")], by = "pie.id") %>%
+    inner_join(data.demographics[c("pie.id", "group")], by = "pie.id") %>%
+    mutate(yearmo = floor_date(start.datetime, unit = "month")) %>%
+    inner_join(raw.cost, by = c("cdm.code", "yearmo")) %>%
+    mutate(cost = ifelse(group == "tmc", quantity * tmc.cost, quantity * community.cost)) %>%
+    group_by(pie.id) %>%
+    summarize(cost = sum(cost))
+    
+data.cost.days <- data.cost %>%
+    inner_join(data.demographics[c("pie.id", "group")], by = "pie.id") %>%
+    group_by(group) %>%
+    summarize(group.cost = sum(cost)) %>%
+    inner_join(tmp.duration, by = "group") %>%
+    inner_join(tmp.days, by = "group") %>%
+    mutate(cost.pt.day = group.cost / pt.days.hosp,
+           cost.pt.day.dexmed = group.cost / pt.days.dexmed)
+    
+data.dexmed.cost <- raw.cost %>%
+    filter(yearmo >= mdy("7/1/2014", tz = "UTC"),
+           yearmo <= mdy("6/1/2015", tz = "UTC")) %>%
+    group_by(cdm.code) %>%
+    summarize(tmc.cost = mean(tmc.cost),
+              community.cost = mean(community.cost))
 
 # finish -----------------------------------------------
 concat_encounters(data.demographics$pie.id)
