@@ -1,0 +1,265 @@
+---
+title: "Dexmedetomidine MUE Analysis"
+output:
+  html_notebook: 
+    code_folding: hide
+    toc: yes
+    toc_float: yes
+---
+
+```{r library, message=FALSE}
+source("0-library.R")
+tmp <- get_rds(dir.save)
+library(tableone)
+```
+
+**Notes**
+
+1. Groups: tmc = MH-TMC; mhhs = Rest of System
+1. Data were calculated using Chi-Squared for categorical data and t-test or Mann-Whitney (noted by "nonnorm" in the *test* column) for continuous data.
+
+## Patients
+
+### Demographics
+```{r demographics, results='asis'}
+d <- data.demographics %>%
+    mutate(sex = factor(sex, levels = c("Female", "Male")),
+           race = factor(race, exclude = c("", "Unknown")),
+           disposition = str_replace_all(disposition, regex(".*expired.*|.*hospice.*|.*deceased.*", ignore_case = TRUE), "Deceased/Hospice"),
+           disposition = str_replace_all(disposition, regex(".*home.*|.*against.*", ignore_case = TRUE), "Home"),
+           disposition = str_replace_all(disposition, regex(".*dc.*|.*transfer.*|.*care.*|.*skill.*", ignore_case = TRUE), "Transferred"))
+
+vars <- c("age", "sex", "race", "length.stay", "disposition", "facility")
+fvars <- c("sex", "race", "disposition", "facility")
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = c("age", "length.stay"))
+
+knitr::kable(ptbl, caption = "Demographics")
+```
+
+### SOFA Score
+
+```{r sofa, results='asis'}
+d <- data.sofa.score %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- names(d)[-c(1, 9)]
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = vars)
+
+knitr::kable(ptbl, caption = "SOFA")
+```
+
+**Notes**
+
+1. The median score for each organ system, along with median total SOFA scores, are provided for each group.
+
+#### Count of Patients with Each SOFA Score
+```{r sofa2, results='asis'}
+d <- data.sofa.score %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") %>%
+    group_by(group, sofa) %>%
+    summarize(n = n()) %>%
+    spread(sofa, n, fill = 0) %>%
+    group_by(group)
+
+knitr::kable(d, caption = "Count of SOFA Scores")
+```
+
+**Notes**
+
+1. This data represents the number of patients with each SOFA score. This could be used to report the SOFA score in bins (ex: 0-6, 7-9, etc.).
+
+### Substance Abuse
+
+```{r substance, results='asis'}
+d <- data.subabuse %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- c("etoh.abuse", "etoh.high", "sub.abuse", "uds.pos")
+fvars <- vars
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE)
+
+knitr::kable(tbl, caption = "Substance Abuse")
+```
+
+**Notes**
+
+1. etoh.abuse and sub.abuse are based on ICD-9-CM codes for EtOH/substance abuse.
+1. etoh.high = EtOH level was > 0.08
+1. uds.pos = UDS was positive, excluding benzodiazepines and opiates
+
+## Dexmedetomidine Therapy
+
+### Indications
+```{r indications, results='asis'}
+d <- data.manual %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") %>%
+    mutate(icu.reason = str_trim(icu.reason, side = "both"),
+           icu.reason = str_replace_all(icu.reason, "srug", "surg")) 
+
+vars <- c("icu.reason", "dexmed.indication")
+fvars <- vars
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE, cramVars = "icu.reason")
+
+knitr::kable(tbl, caption = "Indications")
+```
+
+### Dexmedetomidine Infusion
+
+```{r dexmed, results='asis'}
+d <- data.meds.cont.sum %>%
+    filter(med == "dexmedetomidine") %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- names(d[, -c(1, 2, 9)])
+fvars <- "num.infusions"
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = vars[-1])
+
+knitr::kable(ptbl, caption = "Dexmedetomidine Infusion")
+```
+
+**Notes**
+
+1. num.infusions = number of independent dexmedetomidine infusions; a new infusion was defined as > 12 hours off dexmedetomidine
+1. cum.dose = cumulative dexmedetomidine dose received from all infusions, in micrograms / kg
+1. cum.duration = total amount of time, in hours, from start to finish for all infusions; this includes time where the drip may have been off for a short period of time
+1. cum.run.time = total amount of time, in hours, where the dexmedetomidine infusion was actually running
+1. time.wt.avg = dexmedetomidine infusion rate across all infusions, in microgram/kg/hour
+1. max.rate = maximum dexmedetomidine infusion rate, in microgram/kg/hour
+
+### Concurrent Use of Continuous Sedatives / Analgesics
+
+```{r sedativse, results='asis'}
+d <- data.sedatives %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- names(d[, -c(1, 9)])
+fvars <- vars
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE)
+
+knitr::kable(tbl, caption = "Concurrent Sedatives")
+```
+
+**Notes**
+
+1. There were no patients who received continuous morphine
+
+## Mechanical Ventilation
+
+```{r vent, results='asis'}
+d <- data.vent %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") %>%
+    mutate(vent.times = as.character(vent.num),
+           vent.times = ifelse(vent.num >= 3, ">/= 3", vent.times),
+           vent.times = ordered(vent.times, levels = c("1", "2", ">/= 3")))
+
+vars <- c("vent", "vent.times", "vent.duration", "dexm.vent.duration")
+fvars <- c("vent", "vent.times")
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE, nonnormal = c("vent.duration", "dexm.vent.duration"))
+
+knitr::kable(tbl, caption = "Mechanical Ventilation")
+```
+
+**Notes**
+
+1. vent.times = number of times patient was intubated
+1. vent.duration = total time on ventilator, in hours, from all intubations
+1. dexm.vent.duration = total time on ventilator and on dexmedetomidine, in hours
+
+### RASS
+
+```{r rass, results='asis'}
+d <- data.rass %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- names(data.rass)[-1]
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d)
+ptbl <- print(tbl, printToggle = FALSE)
+
+knitr::kable(ptbl, caption = "RASS")
+```
+
+**Notes**
+
+1. Data represents the percent of time the RASS score was at goal (RASS of -1 or -2), above goal (RASS -3 to -5), or below goal (RASS of 0 to 4) in the 24-hours prior to dexmedetomidine initiation (pre), during dexmedetomidine, or in the 24-hours after dexmedetomidine (post)
+
+## Safety Outcomes
+
+```{r safety, results='asis'}
+d <- data.safety %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- c("hypotension", "bradycardia", "bp.change", "hr.change")
+fvars <- c("hypotension", "bradycardia")
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
+tbl <- print(tbl, printToggle = FALSE, nonnormal = c("bp.change", "hr.change"))
+
+knitr::kable(tbl, caption = "Safety")
+```
+
+**Notes**
+
+1. Hypotension defined as *new* onset of SBP < 80 mmHg, MAP < 60, or requiring vasopressor initiation
+1. Bradycardia defined as *new* onset of HR < 55 bpm or administration of atropine
+
+## Cost
+
+#### Dexmedetomidine Cost per Patient
+
+```{r cost, results='asis'}
+d <- data.cost.sum %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- "cost"
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = vars)
+
+knitr::kable(ptbl, caption = "Cost")
+```
+
+#### Dexmedetomidine Utilization by Product
+
+```{r quantity, results='asis'}
+knitr::kable(data.cost.prod, caption = "Product Utilization")
+```
+
+#### Dexmedetomidine Product Cost
+
+```{r vials, results='asis'}
+knitr::kable(data.dexmed.cost, caption = "Product Cost")
+```
+
+**Notes**
+
+1. Average cost for FY 2015
+2. Community hospitals did not use the 4 mcg/mL 100 mL bag
+
+## References
+
+#### SOFA Score
+1. Vincent JL, et al. Intensive Care Med. 1996;22:707-10
+1. Jones AE, et al. Crit Care Med. 2009;37:1649-54
+
+#### Statistical Analysis
+
+1. `r R.version.string` on a `r .Platform$OS.type` `r .Platform$r_arch` system
+```{r citation, results='asis', echo=FALSE}
+citation()
+```
+
