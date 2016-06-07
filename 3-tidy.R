@@ -48,7 +48,9 @@ data.meds.cont <- summarize_cont_meds(tmp.meds.cont.run) %>%
 
 data.meds.cont.sum <- data.meds.cont %>%
     group_by(pie.id, med) %>%
+    arrange(drip.count) %>%
     summarize(num.infusions = n(),
+              start.rate = first(first.rate),
               cum.dose = sum(cum.dose, na.rm = TRUE),
               cum.duration = sum(duration, na.rm = TRUE),
               cum.run.time = sum(run.time, na.rm = TRUE),
