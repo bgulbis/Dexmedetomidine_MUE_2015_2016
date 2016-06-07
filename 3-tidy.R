@@ -657,7 +657,9 @@ data.cost <- raw.charges %>%
     inner_join(data.demographics[c("pie.id", "group")], by = "pie.id") %>%
     mutate(yearmo = floor_date(start.datetime, unit = "month")) %>%
     inner_join(raw.cost, by = c("cdm.code", "yearmo")) %>%
-    mutate(cost = ifelse(group == "tmc", quantity * tmc.cost, quantity * community.cost)) %>%
+    mutate(cost = ifelse(group == "tmc", quantity * tmc.cost, quantity * community.cost)) 
+
+data.cost.sum <- data.cost %>%
     group_by(pie.id) %>%
     summarize(cost = sum(cost))
     
@@ -669,13 +671,27 @@ data.cost.days <- data.cost %>%
     inner_join(tmp.days, by = "group") %>%
     mutate(cost.pt.day = group.cost / pt.days.hosp,
            cost.pt.day.dexmed = group.cost / pt.days.dexmed)
-    
+
+tmp.vials <- read_edw_data(dir.data, "cost") %>%
+    select(cdm.code, cdm.desc) %>%
+    distinct()
+
 data.dexmed.cost <- raw.cost %>%
     filter(yearmo >= mdy("7/1/2014", tz = "UTC"),
            yearmo <= mdy("6/1/2015", tz = "UTC")) %>%
     group_by(cdm.code) %>%
-    summarize(tmc.cost = mean(tmc.cost),
-              community.cost = mean(community.cost))
+    summarize(mhhs = mean(community.cost),
+              tmc = mean(tmc.cost)) %>%
+    inner_join(tmp.vials, by = "cdm.code") %>%
+    select(cdm.code, cdm.desc, everything())
+
+data.cost.prod <- data.cost %>%
+    group_by(cdm.code, group) %>%
+    summarize(quantity = sum(quantity)) %>%
+    spread(group, quantity, fill = 0) %>%
+    inner_join(tmp.vials, by = "cdm.code") %>%
+    select(cdm.code, cdm.desc, everything())
+
 
 # finish -----------------------------------------------
 concat_encounters(data.demographics$pie.id)

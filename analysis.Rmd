@@ -213,6 +213,39 @@ knitr::kable(tbl, caption = "Safety")
 1. Hypotension defined as *new* onset of SBP < 80 mmHg, MAP < 60, or requiring vasopressor initiation
 1. Bradycardia defined as *new* onset of HR < 55 bpm or administration of atropine
 
+## Cost
+
+#### Dexmedetomidine Cost per Patient
+
+```{r cost, results='asis'}
+d <- data.cost.sum %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- "cost"
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = vars)
+
+knitr::kable(ptbl, caption = "Cost")
+```
+
+#### Dexmedetomidine Utilization by Product
+
+```{r quantity, results='asis'}
+knitr::kable(data.cost.prod, caption = "Product Utilization")
+```
+
+#### Dexmedetomidine Product Cost
+
+```{r vials, results='asis'}
+knitr::kable(data.dexmed.cost, caption = "Product Cost")
+```
+
+**Notes**
+
+1. Average cost for FY 2015
+2. Community hospitals did not use the 4 mcg/mL 100 mL bag
+
 ## References
 
 #### SOFA Score
