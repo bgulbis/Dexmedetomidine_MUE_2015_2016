@@ -118,7 +118,7 @@ d <- data.meds.cont.sum %>%
     filter(med == "dexmedetomidine") %>%
     inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
 
-vars <- names(d[, -c(1, 2, 9)])
+vars <- names(d[, -c(1, 2, 10)])
 fvars <- "num.infusions"
 
 tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
@@ -130,6 +130,7 @@ knitr::kable(ptbl, caption = "Dexmedetomidine Infusion")
 **Notes**
 
 1. num.infusions = number of independent dexmedetomidine infusions; a new infusion was defined as > 12 hours off dexmedetomidine
+1. start.rate = starting rate for dexmedetomidine for the first infusion
 1. cum.dose = cumulative dexmedetomidine dose received from all infusions, in micrograms / kg
 1. cum.duration = total amount of time, in hours, from start to finish for all infusions; this includes time where the drip may have been off for a short period of time
 1. cum.run.time = total amount of time, in hours, where the dexmedetomidine infusion was actually running
