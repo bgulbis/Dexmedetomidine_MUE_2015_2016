@@ -3,7 +3,7 @@ title: "Dexmedetomidine MUE Analysis"
 output: html_notebook
 ---
 
-```{r library}
+```{r library, message=FALSE}
 source("0-library.R")
 tmp <- get_rds(dir.save)
 library(tableone)
@@ -11,6 +11,7 @@ library(tableone)
 
 **Notes**
 
+1. Groups: tmc = MH-TMC; mhhs = Rest of System
 1. Data were calculated using Chi-Squared for categorical data and t-test or Mann-Whitney (noted by "nonnorm" in the *test* column) for continuous data.
 
 ## Patients
@@ -24,8 +25,8 @@ d <- data.demographics %>%
            disposition = str_replace_all(disposition, regex(".*home.*|.*against.*", ignore_case = TRUE), "Home"),
            disposition = str_replace_all(disposition, regex(".*dc.*|.*transfer.*|.*care.*|.*skill.*", ignore_case = TRUE), "Transferred"))
 
-vars <- c("age", "sex", "race", "length.stay", "disposition")
-fvars <- c("sex", "race", "disposition")
+vars <- c("age", "sex", "race", "length.stay", "disposition", "facility")
+fvars <- c("sex", "race", "disposition", "facility")
 
 tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
 ptbl <- print(tbl, printToggle = FALSE, nonnormal = c("age", "length.stay"))
@@ -34,6 +35,38 @@ knitr::kable(ptbl, caption = "Demographics")
 ```
 
 ### SOFA Score
+
+```{r sofa, results='asis'}
+d <- data.sofa.score %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
+
+vars <- names(d)[-c(1, 9)]
+
+tbl <- CreateTableOne(vars = vars, strata = "group", data = d)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = vars)
+
+knitr::kable(ptbl, caption = "SOFA")
+```
+
+**Notes**
+
+1. The median score for each organ system, along with median total SOFA scores, are provided for each group.
+
+#### Count of Patients with Each SOFA Score
+```{r sofa2, results='asis'}
+d <- data.sofa.score %>%
+    inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") %>%
+    group_by(group, sofa) %>%
+    summarize(n = n()) %>%
+    spread(sofa, n, fill = 0) %>%
+    group_by(group)
+
+knitr::kable(d, caption = "Count of SOFA Scores")
+```
+
+**Notes**
+
+1. This data represents the number of patients with each SOFA score. This could be used to report the SOFA score in bins (ex: 0-6, 7-9, etc.).
 
 ### Substance Abuse
 
@@ -53,8 +86,8 @@ knitr::kable(tbl, caption = "Substance Abuse")
 **Notes**
 
 1. etoh.abuse and sub.abuse are based on ICD-9-CM codes for EtOH/substance abuse.
-2. etoh.high = EtOH level was > 0.08
-3. uds.pos = UDS was positive, excluding benzodiazepines and opiates
+1. etoh.high = EtOH level was > 0.08
+1. uds.pos = UDS was positive, excluding benzodiazepines and opiates
 
 ## Dexmedetomidine Therapy
 
@@ -93,11 +126,11 @@ knitr::kable(ptbl, caption = "Dexmedetomidine Infusion")
 **Notes**
 
 1. num.infusions = number of independent dexmedetomidine infusions; a new infusion was defined as > 12 hours off dexmedetomidine
-2. cum.dose = cumulative dexmedetomidine dose received from all infusions, in micrograms / kg
-3. cum.duration = total amount of time, in hours, from start to finish for all infusions; this includes time where the drip may have been off for a short period of time
-4. cum.run.time = total amount of time, in hours, where the dexmedetomidine infusion was actually running
-5. time.wt.avg = dexmedetomidine infusion rate across all infusions, in microgram/kg/hour
-6. max.rate = maximum dexmedetomidine infusion rate, in microgram/kg/hour
+1. cum.dose = cumulative dexmedetomidine dose received from all infusions, in micrograms / kg
+1. cum.duration = total amount of time, in hours, from start to finish for all infusions; this includes time where the drip may have been off for a short period of time
+1. cum.run.time = total amount of time, in hours, where the dexmedetomidine infusion was actually running
+1. time.wt.avg = dexmedetomidine infusion rate across all infusions, in microgram/kg/hour
+1. max.rate = maximum dexmedetomidine infusion rate, in microgram/kg/hour
 
 ### Concurrent Use of Continuous Sedatives / Analgesics
 
@@ -139,8 +172,8 @@ knitr::kable(tbl, caption = "Mechanical Ventilation")
 **Notes**
 
 1. vent.times = number of times patient was intubated
-2. vent.duration = total time on ventilator, in hours, from all intubations
-3. dexm.vent.duration = total time on ventilator and on dexmedetomidine, in hours
+1. vent.duration = total time on ventilator, in hours, from all intubations
+1. dexm.vent.duration = total time on ventilator and on dexmedetomidine, in hours
 
 ### RASS
 
@@ -178,4 +211,18 @@ knitr::kable(tbl, caption = "Safety")
 **Notes**
 
 1. Hypotension defined as *new* onset of SBP < 80 mmHg, MAP < 60, or requiring vasopressor initiation
-2. Bradycardia defined as *new* onset of HR < 55 bpm or administration of atropine
+1. Bradycardia defined as *new* onset of HR < 55 bpm or administration of atropine
+
+## References
+
+#### SOFA Score
+1. Vincent JL, et al. Intensive Care Med. 1996;22:707-10
+1. Jones AE, et al. Crit Care Med. 2009;37:1649-54
+
+#### Statistical Analysis
+
+1. `r R.version.string` on a `r .Platform$OS.type` `r .Platform$r_arch` system
+```{r citation, results='asis', echo=FALSE}
+citation()
+```
+
