@@ -1,6 +1,10 @@
 ---
 title: "Dexmedetomidine MUE Analysis"
-output: html_notebook
+output:
+  html_notebook: 
+    code_folding: hide
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r library, message=FALSE}
