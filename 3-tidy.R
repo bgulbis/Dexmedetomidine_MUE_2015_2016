@@ -264,12 +264,19 @@ data.safety.bp$hypotension[is.na(data.safety.bp$hypotension)] <- FALSE
 
 # create combined safety table
 tmp.safety.bp <- data.safety.bp %>%
-    group_by(pie.id) %>%
-    summarize(bp.change = min(bp.change.mean))
+    group_by(pie.id, vital) %>%
+    summarize(prior = first(bp.prior.mean),
+              during = first(bp.during.mean),
+              change = min(bp.change.mean)) %>%
+    gather(time, bp, prior:change) %>%
+    unite(vital.time, vital, time) %>%
+    spread(vital.time, bp)
 
 tmp.safety.hr <- data.safety.hr %>%
     group_by(pie.id) %>%
-    summarize(hr.change = min(hr.change.mean))
+    summarize(hr.prior = first(hr.prior.mean),
+              hr.during = first(hr.during.mean),
+              hr.change = min(hr.change.mean)) 
 
 data.safety <- full_join(data.safety.bp, data.safety.hr, by = "pie.id") %>%
     group_by(pie.id) %>%
