@@ -204,19 +204,41 @@ knitr::kable(ptbl, caption = "RASS")
 d <- data.safety %>%
     inner_join(data.demographics[, c("pie.id", "group")], by = "pie.id") 
 
-vars <- c("hypotension", "bradycardia", "bp.change", "hr.change")
+vars <- c("hypotension", "bradycardia", "map_prior", "map_during", "map_change", "sbp_prior", "sbp_during", "sbp_change", "hr.prior", "hr.during", "hr.change")
 fvars <- c("hypotension", "bradycardia")
 
 tbl <- CreateTableOne(vars = vars, strata = "group", data = d, factorVars = fvars)
-tbl <- print(tbl, printToggle = FALSE, nonnormal = c("bp.change", "hr.change"))
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = vars[-c(1, 2)])
 
-knitr::kable(tbl, caption = "Safety")
+knitr::kable(ptbl, caption = "Safety")
 ```
 
 **Notes**
 
 1. Hypotension defined as *new* onset of SBP < 80 mmHg, MAP < 60, or requiring vasopressor initiation
 1. Bradycardia defined as *new* onset of HR < 55 bpm or administration of atropine
+
+#### Hyoptensive Patients
+
+```{r bp, results='asis'}
+df <- filter(d, hypotension == TRUE)
+
+tbl <- CreateTableOne(vars = vars[-c(1:2, 9:11)], strata = "group", data = df)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = vars[-c(1:2, 9:11)])
+
+knitr::kable(ptbl, caption = "Safety")
+```
+
+#### Normotensive Patients
+
+```{r bp2, results='asis'}
+df <- filter(d, hypotension == FALSE)
+
+tbl <- CreateTableOne(vars = vars[-c(1:2, 9:11)], strata = "group", data = df)
+ptbl <- print(tbl, printToggle = FALSE, nonnormal = vars[-c(1:2, 9:11)])
+
+knitr::kable(ptbl, caption = "Safety")
+```
 
 ## Cost
 
